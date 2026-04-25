@@ -53,6 +53,26 @@ GOPROXY=https://goproxy.cn,direct \
 npx --yes github:Davied-H/ncm-cli install --dir ~/.local/bin --with-playwright-browser
 ```
 
+## Check for Updates
+
+When the user asks to install, update, or verify whether their `ncm` CLI is current, check GitHub before assuming the local binary is up to date:
+
+```bash
+npx --yes github:Davied-H/ncm-cli check-update --dir ~/.local/bin --json
+```
+
+This compares the installed `ncm version --json` output with the latest `package.json` version and latest `main` commit from `Davied-H/ncm-cli` on GitHub.
+
+If an update is available, reinstall from the latest GitHub source:
+
+```bash
+PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright \
+GOPROXY=https://goproxy.cn,direct \
+npx --yes github:Davied-H/ncm-cli update --dir ~/.local/bin --with-playwright-driver
+```
+
+Use `--with-playwright-browser` instead of `--with-playwright-driver` only when Chrome is unavailable. Use `--force` only when the user explicitly wants to reinstall even though the check reports no update.
+
 ## Login
 
 Run:
@@ -115,11 +135,12 @@ The desktop playback command uses the NetEase Cloud Music `orpheus://base64(json
 ## Agent Workflow
 
 1. Install or locate `ncm`.
-2. Run `ncm --help` to confirm the binary works.
-3. If the user asks for account data and login is missing, run `ncm login` and wait for the user to complete browser login.
-4. Prefer `--json` for parsing and automation.
-5. Use table output for user-facing summaries.
-6. If a command fails due to Web API changes, inspect the repository docs and run read-only exploration before changing code.
+2. When the user asks for installation, update, or stale-version diagnosis, run `check-update` from GitHub and update if needed.
+3. Run `ncm --help` and `ncm version --json` to confirm the binary works and reports version metadata.
+4. If the user asks for account data and login is missing, run `ncm login` and wait for the user to complete browser login.
+5. Prefer `--json` for parsing and automation.
+6. Use table output for user-facing summaries.
+7. If a command fails due to Web API changes, inspect the repository docs and run read-only exploration before changing code.
 
 ## Development and Validation
 
@@ -163,6 +184,15 @@ npx skills add Davied-H/ncm-cli --skill ncm-cli --full-depth -g -y
 PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright \
 GOPROXY=https://goproxy.cn,direct \
 npx --yes github:Davied-H/ncm-cli install --dir ~/.local/bin --with-playwright-driver
+```
+
+To refresh both the agent skill and the CLI from GitHub:
+
+```bash
+npx skills add Davied-H/ncm-cli --skill ncm-cli --full-depth -g -y
+PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright \
+GOPROXY=https://goproxy.cn,direct \
+npx --yes github:Davied-H/ncm-cli update --dir ~/.local/bin --with-playwright-driver
 ```
 
 For local testing from this repository:

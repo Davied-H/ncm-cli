@@ -58,6 +58,26 @@ ncm --help
 ~/.local/bin/ncm --help
 ```
 
+确认版本元数据：
+
+```bash
+ncm version --json
+```
+
+需要检测本机 CLI 是否落后于 GitHub 最新版本时，运行：
+
+```bash
+npx --yes github:Davied-H/ncm-cli check-update --dir ~/.local/bin --json
+```
+
+如果返回 `updateAvailable: true`，从 GitHub 更新：
+
+```bash
+PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright \
+GOPROXY=https://goproxy.cn,direct \
+npx --yes github:Davied-H/ncm-cli update --dir ~/.local/bin --with-playwright-driver
+```
+
 ## 4. 登录网易云音乐
 
 执行：

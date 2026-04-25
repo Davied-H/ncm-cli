@@ -16,6 +16,11 @@ import (
 	"ncm-cli/internal/output"
 )
 
+var (
+	version = "dev"
+	commit  = "unknown"
+)
+
 type rootOptions struct {
 	configDir string
 	timeout   time.Duration
@@ -33,6 +38,7 @@ func newRootCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:           "ncm",
 		Short:         "网易云音乐命令行工具",
+		Version:       version,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
@@ -46,7 +52,31 @@ func newRootCmd() *cobra.Command {
 		newPlayCmd(),
 		newLyricCmd(opts),
 		newSearchCmd(opts),
+		newVersionCmd(),
 	)
+	return cmd
+}
+
+func newVersionCmd() *cobra.Command {
+	var asJSON bool
+	cmd := &cobra.Command{
+		Use:   "version",
+		Short: "显示 ncm 版本",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			info := struct {
+				Version string `json:"version"`
+				Commit  string `json:"commit"`
+			}{
+				Version: version,
+				Commit:  commit,
+			}
+			if asJSON {
+				return output.JSON(cmd.OutOrStdout(), info)
+			}
+			return output.Text(cmd.OutOrStdout(), "ncm %s (%s)\n", version, commit)
+		},
+	}
+	cmd.Flags().BoolVar(&asJSON, "json", false, "输出 JSON")
 	return cmd
 }
 

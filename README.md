@@ -10,7 +10,7 @@
 请自动安装 ncm-cli。先访问并阅读安装文档：
 https://github.com/Davied-H/ncm-cli/blob/main/CLAUDE_CODE_CODEX_INSTALL.md
 
-按文档步骤执行安装：安装 ncm-cli Skill，安装 ncm CLI 和必需的 Playwright driver，然后运行 `ncm --help` 验证。需要登录时执行 `ncm login`，并等待我扫码或完成网页登录。不要输出或提交任何 cookie、csrf、storage-state.json 等登录态文件。
+按文档步骤执行安装：安装或更新 ncm-cli Skill，安装 ncm CLI 和必需的 Playwright driver，运行 `ncm --help` 与 `ncm version --json` 验证，并用 GitHub `check-update` 检测是否需要更新。需要登录时执行 `ncm login`，并等待我扫码或完成网页登录。不要输出或提交任何 cookie、csrf、storage-state.json 等登录态文件。
 ```
 
 本仓库也包含代理 Skill：`skills/ncm-cli/SKILL.md`。发布到 GitHub 后，可用下面的方式安装到 Claude Code/Codex：
@@ -34,6 +34,7 @@ ncm lyric <song-id> [--raw]
 ncm search suggest <keyword> [--json]
 ncm search song <keyword> [--limit 30] [--offset 0] [--json]
 ncm search playlist <keyword> [--limit 30] [--offset 0] [--json]
+ncm version [--json]
 ```
 
 全局参数：
@@ -78,6 +79,20 @@ npx ncm-cli@latest install --dir ~/.local/bin --with-playwright-driver
 ```
 
 安装器会编译 Go CLI，并把二进制写入指定目录，默认是 `~/.local/bin/ncm`。由于 CLI 需要登录网易云才能使用主要功能，Playwright driver 是必需依赖，安装命令应保留 `--with-playwright-driver`。
+
+检查本机 CLI 是否落后于 GitHub `main` 最新版本：
+
+```bash
+npx --yes github:Davied-H/ncm-cli check-update --dir ~/.local/bin --json
+```
+
+从 GitHub 拉取最新源码并更新本机 CLI：
+
+```bash
+PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright \
+GOPROXY=https://goproxy.cn,direct \
+npx --yes github:Davied-H/ncm-cli update --dir ~/.local/bin --with-playwright-driver
+```
 
 也可以单独安装 Playwright driver：
 
