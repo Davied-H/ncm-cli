@@ -4,7 +4,14 @@
 
 项目使用 Go 实现 CLI，复用网易云 Web 端的 `weapi` 调用模型。写操作、播放 URL 解析、每日推荐和播放记录暂未接入。桌面端播放通过网易云音乐的 `orpheus://` URL Scheme 调起本机客户端。
 
-如果要让 Claude Code 或 Codex 代为快速安装，请把 [CLAUDE_CODE_CODEX_INSTALL.md](CLAUDE_CODE_CODEX_INSTALL.md) 发给它。
+如果要让 Claude Code 或 Codex 代为快速安装，请把下面这段任务发给它：
+
+```text
+请自动安装 ncm-cli。先访问并阅读安装文档：
+https://github.com/Davied-H/ncm-cli/blob/main/CLAUDE_CODE_CODEX_INSTALL.md
+
+按文档步骤执行安装：安装 ncm-cli Skill，安装 ncm CLI 和必需的 Playwright driver，然后运行 `ncm --help` 验证。需要登录时执行 `ncm login`，并等待我扫码或完成网页登录。不要输出或提交任何 cookie、csrf、storage-state.json 等登录态文件。
+```
 
 本仓库也包含代理 Skill：`skills/ncm-cli/SKILL.md`。发布到 GitHub 后，可用下面的方式安装到 Claude Code/Codex：
 
