@@ -1,0 +1,10 @@
+.ncm/
+
+# Local build/test artifacts
+/ncm
+bin/
+dist/
+coverage/
+
+# OS/editor noise
+.DS_Store

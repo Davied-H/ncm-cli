@@ -1,0 +1,34 @@
+{
+  "name": "ncm-cli",
+  "private": false,
+  "version": "0.1.0",
+  "description": "Personal NetEase Cloud Music CLI.",
+  "type": "module",
+  "bin": {
+    "ncm-cli": "./scripts/ncm-install.mjs"
+  },
+  "files": [
+    "cmd/",
+    "internal/",
+    "scripts/ncm-install.mjs",
+    "go.mod",
+    "go.sum",
+    "README.md",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "CLAUDE_CODE_CODEX_INSTALL.md",
+    "skills/",
+    "docs/"
+  ],
+  "scripts": {
+    "install:ncm": "node scripts/ncm-install.mjs",
+    "build:ncm": "go build -o bin/ncm ./cmd/ncm",
+    "login": "node scripts/ncm-login.mjs",
+    "explore": "node scripts/ncm-explore-api.mjs",
+    "explore:cleanup": "NCM_CLEANUP_WRITES=1 node scripts/ncm-explore-api.mjs",
+    "explore:read": "NCM_SKIP_WRITES=1 node scripts/ncm-explore-api.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.59.1"
+  }
+}

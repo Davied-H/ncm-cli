@@ -1,0 +1,4 @@
+interface:
+  display_name: "ncm-cli"
+  short_description: "Use and install the NetEase Cloud Music CLI"
+  default_prompt: "Use $ncm-cli to install the NetEase Cloud Music CLI and query my account."
