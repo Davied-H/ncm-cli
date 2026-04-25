@@ -6,10 +6,10 @@
 
 如果要让 Claude Code 或 Codex 代为快速安装，请把 [CLAUDE_CODE_CODEX_INSTALL.md](CLAUDE_CODE_CODEX_INSTALL.md) 发给它。
 
-本仓库也包含代理 Skill：`skills/ncm-cli/SKILL.md`。发布到 Git 仓库后，可用下面的方式安装到 Claude Code/Codex：
+本仓库也包含代理 Skill：`skills/ncm-cli/SKILL.md`。发布到 GitHub 后，可用下面的方式安装到 Claude Code/Codex：
 
 ```bash
-npx skills add <repo-url-or-owner/repo> --skill ncm-cli --full-depth
+npx skills add Davied-H/ncm-cli --skill ncm-cli --full-depth -g -y
 ```
 
 ## 功能
@@ -44,25 +44,27 @@ ncm search playlist <keyword> [--limit 30] [--offset 0] [--json]
 - Chrome，供 `ncm login` 打开网易云 Web 登录
 - Go Playwright driver
 
-在仓库目录内开发时，推荐用本地 `npx` 安装 CLI：
+发布到 GitHub 后，推荐直接从 GitHub 安装 CLI 和必需的 Playwright driver：
 
 ```bash
-npx . install --dir ~/.local/bin
+npx --yes github:Davied-H/ncm-cli install --dir ~/.local/bin --with-playwright-driver
 ```
 
-发布到 npm 后，可以远程安装：
+在仓库目录内开发时，可以用本地 `npx` 安装：
 
 ```bash
-npx ncm-cli@latest install --dir ~/.local/bin
+npx . install --dir ~/.local/bin --with-playwright-driver
 ```
 
-安装器会编译 Go CLI，并把二进制写入指定目录，默认是 `~/.local/bin/ncm`。由于 CLI 需要登录网易云才能使用主要功能，Playwright driver 是必需依赖，推荐安装时一并安装：
+如果将来发布到 npm，也可以远程安装：
 
 ```bash
 npx ncm-cli@latest install --dir ~/.local/bin --with-playwright-driver
 ```
 
-也可以单独安装必需的 Playwright driver：
+安装器会编译 Go CLI，并把二进制写入指定目录，默认是 `~/.local/bin/ncm`。由于 CLI 需要登录网易云才能使用主要功能，Playwright driver 是必需依赖，安装命令应保留 `--with-playwright-driver`。
+
+也可以单独安装 Playwright driver：
 
 ```bash
 go run github.com/playwright-community/playwright-go/cmd/playwright@v0.5700.1 install chromium

@@ -13,6 +13,7 @@ function usage() {
   console.log(`ncm-cli installer
 
 Usage:
+  npx github:<owner>/<repo> [install] [--dir <bin-dir>] [--name <binary-name>]
   npx ncm-cli@latest [install] [--dir <bin-dir>] [--name <binary-name>]
   node scripts/ncm-install.mjs [install] [--dir <bin-dir>] [--name <binary-name>]
 

@@ -15,25 +15,29 @@ First check whether `ncm` already exists:
 command -v ncm && ncm --help
 ```
 
+If installing from the published GitHub repository, use:
+
+```bash
+npx --yes github:Davied-H/ncm-cli install --dir ~/.local/bin --with-playwright-driver
+```
+
+The published GitHub repository is `Davied-H/ncm-cli`.
+
 If working inside the `ncm-cli` repository, install from the local package:
 
 ```bash
-npx . install --dir ~/.local/bin
+npx . install --dir ~/.local/bin --with-playwright-driver
 ```
 
-If the package has been published to npm, install remotely:
+If the package has also been published to npm, install remotely:
 
 ```bash
-npx ncm-cli@latest install --dir ~/.local/bin
+npx ncm-cli@latest install --dir ~/.local/bin --with-playwright-driver
 ```
 
 If `~/.local/bin` is not on `PATH`, either add it for the user or run the installed binary by absolute path.
 
-The Go Playwright driver is required because `ncm login` opens NetEase Cloud Music Web in Chrome, and most CLI features require login state. Install it before login:
-
-```bash
-go run github.com/playwright-community/playwright-go/cmd/playwright@v0.5700.1 install chromium
-```
+Keep `--with-playwright-driver` in the install command. The Go Playwright driver is required because `ncm login` opens NetEase Cloud Music Web in Chrome, and most CLI features require login state.
 
 ## Login
 
@@ -132,10 +136,17 @@ Use `explore:read` first. Only run write exploration when the user explicitly wa
 
 ## npx skills Installation
 
-If the user wants to install this skill itself, use the skills tool against the repository. This installs the agent skill only; it does not install the `ncm` CLI binary:
+If the user wants to install this skill itself, use the skills tool against the GitHub repository. This installs the agent skill only; it does not install the `ncm` CLI binary:
 
 ```bash
-npx skills add <repo-url-or-owner/repo> --skill ncm-cli --full-depth
+npx skills add Davied-H/ncm-cli --skill ncm-cli --full-depth -g -y
+```
+
+For a full GitHub-based setup, install the skill first, then install the CLI:
+
+```bash
+npx skills add Davied-H/ncm-cli --skill ncm-cli --full-depth -g -y
+npx --yes github:Davied-H/ncm-cli install --dir ~/.local/bin --with-playwright-driver
 ```
 
 For local testing from this repository:

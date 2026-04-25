@@ -1,35 +1,34 @@
-# Claude Code / Codex 安装 ncm-cli 的步骤
+# Claude Code / Codex 从 GitHub 安装 ncm-cli
 
-这份文档只给 Claude Code、Codex 或其他代码代理使用。目标是在用户机器上安装 `ncm-cli`，安装登录所需的 Go Playwright driver，并完成最小可用验证。
+这份文档只给 Claude Code、Codex 或其他代码代理使用。目标是从 GitHub 仓库安装本项目的 Skill 和 `ncm` CLI，并完成登录验证。
 
-## 1. 确认前置依赖
+本项目的 GitHub 仓库是 `Davied-H/ncm-cli`。
 
-先检查 Go 和 npx 是否可用：
+## 1. 安装代理 Skill
 
-```bash
-go version
-npx --version
-```
-
-如果 `go` 不存在，先让用户安装 Go 1.24+。如果 `npx` 不存在，先让用户安装 Node.js/npm。
-
-## 2. 安装 ncm CLI
-
-如果当前目录就是 `ncm-cli` 仓库，执行本地安装：
+先安装本项目自带的 `ncm-cli` Skill，让 Claude Code / Codex 知道后续如何使用这个 CLI：
 
 ```bash
-npx . install --dir ~/.local/bin --with-playwright-driver
+npx skills add Davied-H/ncm-cli --skill ncm-cli --full-depth -g -y
 ```
 
-如果 `ncm-cli` 已发布到 npm，执行远程安装：
+如果使用完整 GitHub URL：
 
 ```bash
-npx ncm-cli@latest install --dir ~/.local/bin --with-playwright-driver
+npx skills add https://github.com/Davied-H/ncm-cli --skill ncm-cli --full-depth -g -y
 ```
 
-`--with-playwright-driver` 是必须的。`ncm-cli` 需要打开网易云 Web 完成登录；不安装 Go Playwright driver，`ncm login` 无法正常工作，而多数功能都依赖登录态。
+## 2. 安装 ncm CLI 和登录 driver
 
-## 3. 确认 PATH
+从同一个 GitHub 仓库拉取并安装 CLI：
+
+```bash
+npx --yes github:Davied-H/ncm-cli install --dir ~/.local/bin --with-playwright-driver
+```
+
+`--with-playwright-driver` 必须保留。`ncm-cli` 需要打开网易云 Web 完成登录；不安装 Go Playwright driver，`ncm login` 无法正常工作，而主要功能都依赖登录态。
+
+## 3. 确认 ncm 可运行
 
 安装脚本默认写入：
 
@@ -37,14 +36,13 @@ npx ncm-cli@latest install --dir ~/.local/bin --with-playwright-driver
 ~/.local/bin/ncm
 ```
 
-检查 `ncm` 是否可直接运行：
+验证：
 
 ```bash
-command -v ncm
 ncm --help
 ```
 
-如果找不到 `ncm`，把 `~/.local/bin` 加入用户的 `PATH`，或临时使用完整路径：
+如果 `ncm` 不在 `PATH`，临时使用完整路径：
 
 ```bash
 ~/.local/bin/ncm --help
