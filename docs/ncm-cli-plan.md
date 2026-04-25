@@ -2,7 +2,7 @@
 
 ## 目标
 
-做一个面向个人使用的网易云音乐命令行工具，优先支持登录态读取、歌单浏览、歌曲元数据/歌词查询，后续再扩展播放地址、收藏/歌单管理等写操作。
+做一个面向个人使用的网易云音乐命令行工具，优先支持登录态读取、歌单浏览与管理、歌曲元数据/歌词查询，后续再扩展播放地址、每日推荐和播放记录。
 
 本轮接口探索使用 Playwright 真实打开 `https://music.163.com`，登录账号后抓取运行时请求。项目内已沉淀登录和探索脚本：
 
@@ -210,13 +210,13 @@ ncm login
 ncm me
 ncm playlist list [--uid <uid>] [--limit 100] [--offset 0] [--json]
 ncm playlist show <playlist-id> [--limit 1000] [--json]
-ncm playlist create <name> [--private]
-ncm playlist add <playlist-id> <song-id...>
-ncm playlist remove <playlist-id> <song-id...>
-ncm playlist delete <playlist-id>
-ncm playlist rename <playlist-id> <name>
-ncm playlist tags <playlist-id> <tag...>
-ncm playlist desc <playlist-id> <text>
+ncm playlist create <name> [--private] [--json]
+ncm playlist add <playlist-id> <song-id...> [--json]
+ncm playlist remove <playlist-id> <song-id...> [--yes] [--json]
+ncm playlist delete <playlist-id> [--yes] [--json]
+ncm playlist rename <playlist-id> <name> [--json]
+ncm playlist tags <playlist-id> <tag...> [--json]
+ncm playlist desc <playlist-id> <text> [--json]
 ncm song <song-id> [--json]
 ncm lyric <song-id> [--raw]
 ncm search suggest <keyword> [--json]
@@ -236,12 +236,18 @@ ncm record [--week|--all]
 5. `song` / `lyric`：查询歌曲元数据与歌词。
 6. `play`：通过桌面端 URL Scheme 推送歌曲到网易云音乐桌面端播放。
 
-第二阶段增强：
+已实现歌单管理功能：
+
+1. `playlist create`：创建公开或私密歌单，创建和描述更新通过页面运行时获取 `checkToken`。
+2. `playlist add/remove`：向当前账号自建歌单添加或移除歌曲，移除默认需要确认。
+3. `playlist delete`：删除当前账号自建歌单，默认需要输入歌单 ID 确认。
+4. `playlist rename/tags/desc`：更新歌单名、标签和描述。
+
+后续增强：
 
 1. 搜索结果分页。
 2. 播放地址解析和外部播放器集成。
 3. 导出歌单为 JSON/CSV/M3U。
-4. 创建歌单、添加/删除歌曲、删除歌单、更新歌单元数据等写操作。
 
 ## 技术方案
 
@@ -301,4 +307,4 @@ func (c *Client) WeAPI(ctx context.Context, path string, payload any, out any) e
 - 网易云 Web 接口不是公开稳定 API，路径和加密参数可能变化。
 - 登录、搜索、播放地址更容易触发风控。
 - 播放 URL 受版权和会员状态影响，CLI 应明确展示不可播放原因。
-- 写操作要谨慎，先只做只读接口。
+- 写操作只允许当前账号自建歌单；删除歌单、移除歌曲必须保留确认机制。

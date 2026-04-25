@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -141,7 +142,17 @@ func newPlaylistCmd(opts *rootOptions) *cobra.Command {
 		Use:   "playlist",
 		Short: "歌单相关命令",
 	}
-	cmd.AddCommand(newPlaylistListCmd(opts), newPlaylistShowCmd(opts))
+	cmd.AddCommand(
+		newPlaylistListCmd(opts),
+		newPlaylistShowCmd(opts),
+		newPlaylistCreateCmd(opts),
+		newPlaylistAddCmd(opts),
+		newPlaylistRemoveCmd(opts),
+		newPlaylistDeleteCmd(opts),
+		newPlaylistRenameCmd(opts),
+		newPlaylistTagsCmd(opts),
+		newPlaylistDescCmd(opts),
+	)
 	return cmd
 }
 
@@ -495,19 +506,40 @@ func newSearchPlaylistCmd(opts *rootOptions) *cobra.Command {
 }
 
 func makeClient(opts *rootOptions) (*ncm.Client, error) {
+	client, _, _, err := makeClientWithSession(opts)
+	return client, err
+}
+
+func makeClientWithStatePath(opts *rootOptions) (*ncm.Client, string, error) {
+	client, statePath, _, err := makeClientWithSession(opts)
+	return client, statePath, err
+}
+
+func makeClientWithSession(opts *rootOptions) (*ncm.Client, string, string, error) {
 	paths, err := config.Resolve(opts.configDir)
 	if err != nil {
-		return nil, err
+		return nil, "", "", err
 	}
-	statePath, _, err := config.ExistingStorageState(paths)
+	statePath, compat, err := config.ExistingStorageState(paths)
 	if err != nil {
-		return nil, err
+		return nil, "", "", err
 	}
 	state, err := config.LoadStorageState(statePath)
 	if err != nil {
-		return nil, err
+		return nil, "", "", err
 	}
-	return ncm.NewClientFromStorageState(state, opts.timeout)
+	client, err := ncm.NewClientFromStorageState(state, opts.timeout)
+	if err != nil {
+		return nil, "", "", err
+	}
+	profileDir := paths.ProfileDir
+	if compat {
+		profileDir, err = filepath.Abs(filepath.Join(".ncm", "chrome-profile"))
+		if err != nil {
+			return nil, "", "", err
+		}
+	}
+	return client, statePath, profileDir, nil
 }
 
 func commandContext(cmd *cobra.Command, opts *rootOptions) (context.Context, context.CancelFunc) {

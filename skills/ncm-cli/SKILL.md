@@ -105,7 +105,16 @@ ncm playlist list
 ncm playlist list --json
 ncm playlist show <playlist-id> --limit 20
 ncm playlist show <playlist-id> --json
+ncm playlist create <name> [--private] [--json]
+ncm playlist add <playlist-id> <song-id...> [--json]
+ncm playlist remove <playlist-id> <song-id...> [--yes] [--json]
+ncm playlist delete <playlist-id> [--yes] [--json]
+ncm playlist rename <playlist-id> <name> [--json]
+ncm playlist tags <playlist-id> <tag...> [--json]
+ncm playlist desc <playlist-id> <text> [--json]
 ```
+
+`playlist create` and `playlist desc` briefly reuse the Chrome profile to obtain the NetEase Web runtime `checkToken`. Never print that token.
 
 Songs and lyrics:
 
@@ -207,5 +216,6 @@ After installing or updating a skill, tell the user to restart Claude Code/Codex
 
 - Do not expose login state or encrypted request fields.
 - Do not commit `.ncm/`, `~/.config/ncm-cli/`, or generated login files.
-- Write operations are not part of the current CLI surface; do not invent write commands.
+- Playlist write operations only support the current account's own regular playlists.
+- Removing songs and deleting playlists require confirmation by default; use `--yes` only when the user explicitly wants non-interactive execution.
 - Playback URL availability depends on copyright, membership, region, and login state.

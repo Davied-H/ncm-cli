@@ -48,6 +48,24 @@ type PlaylistDetailResponse struct {
 	Privileges []Privilege `json:"privileges"`
 }
 
+type PlaylistWriteResponse struct {
+	Code        int       `json:"code"`
+	Message     string    `json:"message,omitempty"`
+	Msg         string    `json:"msg,omitempty"`
+	Playlist    *Playlist `json:"playlist,omitempty"`
+	CoverImgURL string    `json:"coverImgUrl,omitempty"`
+}
+
+func (r *PlaylistWriteResponse) MessageText() string {
+	if r == nil {
+		return ""
+	}
+	if r.Message != "" {
+		return r.Message
+	}
+	return r.Msg
+}
+
 type SongDetailResponse struct {
 	Code       int         `json:"code"`
 	Songs      []Song      `json:"songs"`
@@ -184,6 +202,78 @@ func (c *Client) PlaylistDetail(ctx context.Context, id int64, limit int) (*Play
 		"id": id,
 		"n":  limit,
 		"s":  8,
+	}, &out)
+	return &out, err
+}
+
+func (c *Client) PlaylistCreate(ctx context.Context, name string, private bool, checkToken string) (*PlaylistWriteResponse, error) {
+	payload := map[string]any{
+		"name":       name,
+		"checkToken": checkToken,
+	}
+	if private {
+		payload["privacy"] = 10
+	}
+	var out PlaylistWriteResponse
+	err := c.WeAPI(ctx, "/api/playlist/create", payload, &out)
+	return &out, err
+}
+
+func (c *Client) PlaylistAddTracks(ctx context.Context, playlistID int64, songIDs []int64) (*PlaylistWriteResponse, error) {
+	return c.playlistManipulateTracks(ctx, "add", playlistID, songIDs)
+}
+
+func (c *Client) PlaylistRemoveTracks(ctx context.Context, playlistID int64, songIDs []int64) (*PlaylistWriteResponse, error) {
+	return c.playlistManipulateTracks(ctx, "del", playlistID, songIDs)
+}
+
+func (c *Client) playlistManipulateTracks(ctx context.Context, op string, playlistID int64, songIDs []int64) (*PlaylistWriteResponse, error) {
+	trackIDs, err := json.Marshal(songIDs)
+	if err != nil {
+		return nil, err
+	}
+	var out PlaylistWriteResponse
+	err = c.WeAPI(ctx, "/api/playlist/manipulate/tracks", map[string]any{
+		"op":       op,
+		"pid":      playlistID,
+		"trackIds": string(trackIDs),
+		"imme":     true,
+	}, &out)
+	return &out, err
+}
+
+func (c *Client) PlaylistRename(ctx context.Context, id int64, name string) (*PlaylistWriteResponse, error) {
+	var out PlaylistWriteResponse
+	err := c.WeAPI(ctx, "/api/playlist/update/name", map[string]any{
+		"id":   id,
+		"name": name,
+	}, &out)
+	return &out, err
+}
+
+func (c *Client) PlaylistUpdateTags(ctx context.Context, id int64, tags []string) (*PlaylistWriteResponse, error) {
+	var out PlaylistWriteResponse
+	err := c.WeAPI(ctx, "/api/playlist/tags/update", map[string]any{
+		"id":   id,
+		"tags": strings.Join(tags, ","),
+	}, &out)
+	return &out, err
+}
+
+func (c *Client) PlaylistUpdateDescription(ctx context.Context, id int64, desc string, checkToken string) (*PlaylistWriteResponse, error) {
+	var out PlaylistWriteResponse
+	err := c.WeAPI(ctx, "/api/playlist/desc/update", map[string]any{
+		"id":         id,
+		"desc":       desc,
+		"checkToken": checkToken,
+	}, &out)
+	return &out, err
+}
+
+func (c *Client) PlaylistDelete(ctx context.Context, id int64) (*PlaylistWriteResponse, error) {
+	var out PlaylistWriteResponse
+	err := c.WeAPI(ctx, "/api/playlist/delete", map[string]any{
+		"pid": id,
 	}, &out)
 	return &out, err
 }

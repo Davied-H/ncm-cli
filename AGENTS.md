@@ -14,11 +14,12 @@
 ## 当前状态
 
 - Go module 已生成，命令名为 `ncm`。
-- 第一版只读命令已实现：`login`、`me`、`playlist list/show`、`song`、`lyric`、`search suggest/song/playlist`。
+- 第一版命令已实现：`login`、`me`、`playlist list/show/create/add/remove/delete/rename/tags/desc`、`song`、`lyric`、`search suggest/song/playlist`。
 - 主要实现目录：
   - `cmd/ncm/`
   - `internal/config/`
   - `internal/crypto/`
+  - `internal/checktoken/`
   - `internal/login/`
   - `internal/ncm/`
   - `internal/output/`
@@ -80,7 +81,7 @@ go run ./cmd/ncm search playlist 周杰伦 --limit 2 --json
 
 - 不提交 `.ncm/`、`~/.config/ncm-cli/` 或任何真实登录态。
 - 不把真实 cookie、csrf、`params`、`encSecKey`、`checkToken` 写入 README、docs、测试快照或日志。
-- 写操作尚未实现；后续实现时默认只允许操作当前账号自建歌单。
+- 歌单写操作默认只允许操作当前账号自建歌单。
 - 删除歌单、批量删除、移除歌曲等命令必须有确认机制。
 - 创建歌单和更新描述依赖页面运行时 `checkToken`，历史探索来源为 `nm.x.lc1x(callback)`。
 - 播放 URL 受版权、会员、地区和登录态影响，不能假定一定可播放。

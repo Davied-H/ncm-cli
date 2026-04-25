@@ -1,8 +1,8 @@
 # ncm-cli
 
-`ncm-cli` 是一个面向个人使用的网易云音乐命令行工具。当前第一版只实现只读能力：登录态校验、账号信息、歌单、歌曲、歌词和搜索。
+`ncm-cli` 是一个面向个人使用的网易云音乐命令行工具。当前已实现登录态校验、账号信息、歌单浏览与管理、歌曲、歌词和搜索。
 
-项目使用 Go 实现 CLI，复用网易云 Web 端的 `weapi` 调用模型。写操作、播放 URL 解析、每日推荐和播放记录暂未接入。桌面端播放通过网易云音乐的 `orpheus://` URL Scheme 调起本机客户端。
+项目使用 Go 实现 CLI，复用网易云 Web 端的 `weapi` 调用模型。播放 URL 解析、每日推荐和播放记录暂未接入。桌面端播放通过网易云音乐的 `orpheus://` URL Scheme 调起本机客户端。
 
 如果要让 Claude Code 或 Codex 代为快速安装，请把下面这段任务发给它：
 
@@ -28,6 +28,13 @@ ncm login
 ncm me
 ncm playlist list [--uid <uid>] [--limit 100] [--offset 0] [--json]
 ncm playlist show <playlist-id> [--limit 1000] [--json]
+ncm playlist create <name> [--private] [--json]
+ncm playlist add <playlist-id> <song-id...> [--json]
+ncm playlist remove <playlist-id> <song-id...> [--yes] [--json]
+ncm playlist delete <playlist-id> [--yes] [--json]
+ncm playlist rename <playlist-id> <name> [--json]
+ncm playlist tags <playlist-id> <tag...> [--json]
+ncm playlist desc <playlist-id> <text> [--json]
 ncm song <song-id> [--json]
 ncm play <song-id> [--print-url]
 ncm lyric <song-id> [--raw]
@@ -164,6 +171,20 @@ go run ./cmd/ncm playlist list
 go run ./cmd/ncm playlist show 490155105 --limit 20
 ```
 
+管理歌单：
+
+```bash
+go run ./cmd/ncm playlist create "我的新歌单" --private
+go run ./cmd/ncm playlist add 17924063236 210049 29816860
+go run ./cmd/ncm playlist remove 17924063236 210049
+go run ./cmd/ncm playlist rename 17924063236 "新的歌单名"
+go run ./cmd/ncm playlist tags 17924063236 华语 流行
+go run ./cmd/ncm playlist desc 17924063236 "歌单描述"
+go run ./cmd/ncm playlist delete 17924063236
+```
+
+创建歌单和更新描述依赖网易云页面运行时的 `checkToken`，命令会短暂复用登录时的 Chrome profile。
+
 查询歌曲和歌词：
 
 ```bash
@@ -195,7 +216,8 @@ cmd/ncm/             CLI 入口和命令定义
 internal/config/     配置目录、storage-state 读取、cookie 解析
 internal/crypto/     网易云 Web weapi 加密
 internal/login/      Go Playwright 登录流程
-internal/ncm/        API client 和只读接口封装
+internal/checktoken/ 页面运行时 checkToken 获取
+internal/ncm/        API client 和接口封装
 internal/output/     JSON/table 输出工具
 docs/                接口探索记录和 CLI 规划
 scripts/             Node Playwright 登录/探索脚本
@@ -244,6 +266,7 @@ npm run explore:cleanup
 
 - 不提交 `.ncm/`、`~/.config/ncm-cli/` 或任何真实登录态。
 - 不在文档、日志和普通输出中保留 cookie、csrf、`params`、`encSecKey`、`checkToken`。
-- 写操作尚未接入；后续实现时应默认只允许操作当前账号自建歌单，并为删除类命令增加确认机制。
+- 歌单写操作默认只允许操作当前账号自建歌单，不操作收藏歌单或特殊歌单。
+- 删除歌单、移除歌曲默认需要确认；脚本场景可显式传 `--yes`。
 - 播放 URL 解析受版权、会员、地区和登录态影响，不能假定一定可播放。
 - 桌面端播放使用 `orpheus://base64(json)`，不是移动端常见的 `orpheus://song/<id>`。
