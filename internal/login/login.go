@@ -30,6 +30,11 @@ type accountResponse struct {
 	Msg     string `json:"msg"`
 }
 
+const (
+	installPlaywrightDriverCommand  = "go run github.com/playwright-community/playwright-go/cmd/playwright@v0.5700.1 --version"
+	installPlaywrightBrowserCommand = "go run github.com/playwright-community/playwright-go/cmd/playwright@v0.5700.1 install chromium"
+)
+
 func Run(ctx context.Context, opts Options) (*config.UserInfo, error) {
 	paths, err := config.Resolve(opts.ConfigDir)
 	if err != nil {
@@ -47,22 +52,13 @@ func Run(ctx context.Context, opts Options) (*config.UserInfo, error) {
 
 	pw, err := playwright.Run()
 	if err != nil {
-		return nil, fmt.Errorf("启动 Playwright 失败，请先安装 driver：go run github.com/playwright-community/playwright-go/cmd/playwright@v0.5700.1 install chromium: %w", err)
+		return nil, fmt.Errorf("启动 Playwright 失败，请先安装 driver：%s: %w", installPlaywrightDriverCommand, err)
 	}
 	defer pw.Stop()
 
-	browserCtx, err := pw.Chromium.LaunchPersistentContext(paths.ProfileDir, playwright.BrowserTypeLaunchPersistentContextOptions{
-		Channel:           playwright.String("chrome"),
-		Headless:          playwright.Bool(opts.Headless),
-		Viewport:          &playwright.Size{Width: 1280, Height: 900},
-		Locale:            playwright.String("zh-CN"),
-		TimezoneId:        playwright.String("Asia/Shanghai"),
-		IgnoreHttpsErrors: playwright.Bool(true),
-		Args:              []string{"--no-proxy-server"},
-		UserAgent:         playwright.String("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"),
-	})
+	browserCtx, err := launchBrowserContext(pw, paths.ProfileDir, opts)
 	if err != nil {
-		return nil, fmt.Errorf("启动 Chrome 失败，请确认已安装 Chrome 或 Playwright Chromium: %w", err)
+		return nil, err
 	}
 	defer browserCtx.Close()
 
@@ -129,6 +125,33 @@ func Run(ctx context.Context, opts Options) (*config.UserInfo, error) {
 		return nil, fmt.Errorf("写入用户信息失败: %w", err)
 	}
 	return &info, nil
+}
+
+func launchBrowserContext(pw *playwright.Playwright, profileDir string, opts Options) (playwright.BrowserContext, error) {
+	baseOptions := playwright.BrowserTypeLaunchPersistentContextOptions{
+		Headless:          playwright.Bool(opts.Headless),
+		Viewport:          &playwright.Size{Width: 1280, Height: 900},
+		Locale:            playwright.String("zh-CN"),
+		TimezoneId:        playwright.String("Asia/Shanghai"),
+		IgnoreHttpsErrors: playwright.Bool(true),
+		Args:              []string{"--no-proxy-server"},
+		UserAgent:         playwright.String("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"),
+	}
+
+	chromeOptions := baseOptions
+	chromeOptions.Channel = playwright.String("chrome")
+	browserCtx, chromeErr := pw.Chromium.LaunchPersistentContext(profileDir, chromeOptions)
+	if chromeErr == nil {
+		return browserCtx, nil
+	}
+
+	browserCtx, chromiumErr := pw.Chromium.LaunchPersistentContext(profileDir, baseOptions)
+	if chromiumErr == nil {
+		fmt.Fprintln(opts.Stdout, "未能启动系统 Chrome，已改用 Playwright Chromium。")
+		return browserCtx, nil
+	}
+
+	return nil, fmt.Errorf("启动 Chrome 失败: %v。请安装 Chrome，或运行 %q 安装 Playwright Chromium；Playwright Chromium 启动也失败: %w", chromeErr, installPlaywrightBrowserCommand, chromiumErr)
 }
 
 func accountGet(page playwright.Page) (*accountResponse, error) {

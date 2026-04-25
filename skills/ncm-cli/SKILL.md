@@ -18,6 +18,8 @@ command -v ncm && ncm --help
 If installing from the published GitHub repository, use:
 
 ```bash
+PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright \
+GOPROXY=https://goproxy.cn,direct \
 npx --yes github:Davied-H/ncm-cli install --dir ~/.local/bin --with-playwright-driver
 ```
 
@@ -26,18 +28,30 @@ The published GitHub repository is `Davied-H/ncm-cli`.
 If working inside the `ncm-cli` repository, install from the local package:
 
 ```bash
+PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright \
+GOPROXY=https://goproxy.cn,direct \
 npx . install --dir ~/.local/bin --with-playwright-driver
 ```
 
 If the package has also been published to npm, install remotely:
 
 ```bash
+PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright \
+GOPROXY=https://goproxy.cn,direct \
 npx ncm-cli@latest install --dir ~/.local/bin --with-playwright-driver
 ```
 
 If `~/.local/bin` is not on `PATH`, either add it for the user or run the installed binary by absolute path.
 
-Keep `--with-playwright-driver` in the install command. The Go Playwright driver is required because `ncm login` opens NetEase Cloud Music Web in Chrome, and most CLI features require login state.
+Keep `--with-playwright-driver` in the install command. The Go Playwright driver is required because `ncm login` opens NetEase Cloud Music Web in Chrome, and most CLI features require login state. This installs the Playwright Go driver only; it does not download Playwright Chromium.
+
+If Chrome is unavailable on the machine, install the bundled Playwright Chromium browser instead:
+
+```bash
+PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright \
+GOPROXY=https://goproxy.cn,direct \
+npx --yes github:Davied-H/ncm-cli install --dir ~/.local/bin --with-playwright-browser
+```
 
 ## Login
 
@@ -146,6 +160,8 @@ For a full GitHub-based setup, install the skill first, then install the CLI:
 
 ```bash
 npx skills add Davied-H/ncm-cli --skill ncm-cli --full-depth -g -y
+PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright \
+GOPROXY=https://goproxy.cn,direct \
 npx --yes github:Davied-H/ncm-cli install --dir ~/.local/bin --with-playwright-driver
 ```
 

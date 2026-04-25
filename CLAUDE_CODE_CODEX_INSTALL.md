@@ -23,10 +23,20 @@ npx skills add https://github.com/Davied-H/ncm-cli --skill ncm-cli --full-depth 
 从同一个 GitHub 仓库拉取并安装 CLI：
 
 ```bash
+PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright \
+GOPROXY=https://goproxy.cn,direct \
 npx --yes github:Davied-H/ncm-cli install --dir ~/.local/bin --with-playwright-driver
 ```
 
 `--with-playwright-driver` 必须保留。`ncm-cli` 需要打开网易云 Web 完成登录；不安装 Go Playwright driver，`ncm login` 无法正常工作，而主要功能都依赖登录态。
+
+上面的命令只安装 Playwright Go driver，不下载 Playwright Chromium 浏览器包。`ncm login` 默认使用系统 Chrome；如果机器没有 Chrome，再额外安装浏览器包：
+
+```bash
+PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright \
+GOPROXY=https://goproxy.cn,direct \
+npx --yes github:Davied-H/ncm-cli install --dir ~/.local/bin --with-playwright-browser
+```
 
 ## 3. 确认 ncm 可运行
 

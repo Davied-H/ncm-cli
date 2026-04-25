@@ -42,11 +42,19 @@ ncm search playlist <keyword> [--limit 30] [--offset 0] [--json]
 
 - Go 1.24+
 - Chrome，供 `ncm login` 打开网易云 Web 登录
-- Go Playwright driver
+- Go Playwright driver。默认使用系统 Chrome，不会下载 Playwright Chromium 浏览器包
 
 发布到 GitHub 后，推荐直接从 GitHub 安装 CLI 和必需的 Playwright driver：
 
 ```bash
+npx --yes github:Davied-H/ncm-cli install --dir ~/.local/bin --with-playwright-driver
+```
+
+国内网络环境推荐显式使用镜像：
+
+```bash
+PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright \
+GOPROXY=https://goproxy.cn,direct \
 npx --yes github:Davied-H/ncm-cli install --dir ~/.local/bin --with-playwright-driver
 ```
 
@@ -67,7 +75,25 @@ npx ncm-cli@latest install --dir ~/.local/bin --with-playwright-driver
 也可以单独安装 Playwright driver：
 
 ```bash
+PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright \
+GOPROXY=https://goproxy.cn,direct \
+go run github.com/playwright-community/playwright-go/cmd/playwright@v0.5700.1 --version
+```
+
+上面的命令只会准备 Go Playwright driver 并输出版本，不会下载 Chromium。如果机器没有 Chrome，可以额外安装 Playwright Chromium：
+
+```bash
+PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright \
+GOPROXY=https://goproxy.cn,direct \
 go run github.com/playwright-community/playwright-go/cmd/playwright@v0.5700.1 install chromium
+```
+
+或在安装 CLI 时一并安装：
+
+```bash
+PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright \
+GOPROXY=https://goproxy.cn,direct \
+npx --yes github:Davied-H/ncm-cli install --dir ~/.local/bin --with-playwright-browser
 ```
 
 不安装，直接从源码运行：

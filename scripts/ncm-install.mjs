@@ -20,7 +20,9 @@ Usage:
 Options:
   --dir <bin-dir>          Install directory. Defaults to NCM_CLI_INSTALL_DIR or ~/.local/bin.
   --name <binary-name>     Installed binary name. Defaults to ncm.
-  --with-playwright-driver Install required Go Playwright Chromium driver after building.
+  --with-playwright-driver Install required Go Playwright driver after building.
+  --with-playwright-browser
+                          Also install Playwright Chromium. Only needed when Chrome is unavailable.
   --help                   Show this help.
 `);
 }
@@ -32,6 +34,7 @@ function parseArgs(argv) {
     dir: process.env.NCM_CLI_INSTALL_DIR || path.join(os.homedir(), '.local', 'bin'),
     name: 'ncm',
     withPlaywrightDriver: false,
+    withPlaywrightBrowser: false,
   };
 
   if (args[0] && !args[0].startsWith('-')) {
@@ -48,6 +51,8 @@ function parseArgs(argv) {
       opts.name = args[++i];
     } else if (arg === '--with-playwright-driver') {
       opts.withPlaywrightDriver = true;
+    } else if (arg === '--with-playwright-browser') {
+      opts.withPlaywrightBrowser = true;
     } else {
       throw new Error(`未知参数：${arg}`);
     }
@@ -98,11 +103,16 @@ function install(opts) {
   console.log(`Installed ${opts.name} to ${outPath}`);
   console.log(`Run: ${opts.name} login`);
 
-  if (opts.withPlaywrightDriver) {
-    console.log('Installing Go Playwright Chromium driver');
+  if (opts.withPlaywrightBrowser) {
+    console.log('Installing Go Playwright driver and Chromium browser');
     run('go', ['run', 'github.com/playwright-community/playwright-go/cmd/playwright@v0.5700.1', 'install', 'chromium']);
+  } else if (opts.withPlaywrightDriver) {
+    console.log('Installing Go Playwright driver');
+    run('go', ['run', 'github.com/playwright-community/playwright-go/cmd/playwright@v0.5700.1', '--version']);
   } else {
     console.log('Playwright driver is required for ncm login. Install it before logging in:');
+    console.log('  go run github.com/playwright-community/playwright-go/cmd/playwright@v0.5700.1 --version');
+    console.log('If Chrome is unavailable, install Playwright Chromium too:');
     console.log('  go run github.com/playwright-community/playwright-go/cmd/playwright@v0.5700.1 install chromium');
   }
 }
