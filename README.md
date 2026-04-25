@@ -4,6 +4,14 @@
 
 项目使用 Go 实现 CLI，复用网易云 Web 端的 `weapi` 调用模型。播放 URL 解析、每日推荐和播放记录暂未接入。桌面端播放通过网易云音乐的 `orpheus://` URL Scheme 调起本机客户端。
 
+适合这些场景：
+
+- 在终端快速查看当前网易云账号、歌单和歌曲信息。
+- 搜索歌曲或歌单，把结果用 `--json` 交给脚本继续处理。
+- 创建和整理自己的歌单：加歌、移除歌曲、重命名、改标签、改描述、删除测试歌单。
+- 在 macOS 上把歌曲推送给网易云音乐桌面端播放。
+- 给自动化脚本、Agent 或个人工具链提供稳定的网易云音乐 CLI 入口。
+
 如果要让 Claude Code 或 Codex 代为快速安装，请把下面这段任务发给它：
 
 ```text
@@ -19,9 +27,39 @@ https://github.com/Davied-H/ncm-cli/blob/main/CLAUDE_CODE_CODEX_INSTALL.md
 npx skills add Davied-H/ncm-cli --skill ncm-cli --full-depth -g -y
 ```
 
-## 功能
+## 已实现功能
 
-已实现命令：
+账号与登录：
+
+- `ncm login`：打开网易云 Web 登录，保存本地登录态。
+- `ncm me`：查看当前登录账号，支持 `--json`。
+
+歌单浏览：
+
+- `ncm playlist list`：列出当前账号或指定用户的歌单，区分自建和收藏。
+- `ncm playlist show`：查看歌单歌曲、歌手、专辑、时长和播放权限。
+
+歌单管理：
+
+- `ncm playlist create`：创建公开或私密歌单。
+- `ncm playlist add/remove`：批量添加或移除歌曲。
+- `ncm playlist rename/tags/desc`：更新歌单名称、标签和描述。
+- `ncm playlist delete`：删除当前账号自建歌单。
+- 写操作默认只允许操作当前账号自建的普通歌单；移除歌曲和删除歌单默认需要确认，可用 `--yes` 做非交互脚本。
+
+歌曲、歌词与搜索：
+
+- `ncm song`：查看歌曲元数据和权限信息。
+- `ncm lyric`：查看歌词，支持 `--raw` 只输出原始歌词。
+- `ncm search suggest/song/playlist`：搜索建议、歌曲搜索和歌单搜索。
+
+桌面端播放与自动化：
+
+- `ncm play`：通过 macOS 网易云音乐桌面端播放指定歌曲。
+- 所有主要读取命令和歌单写命令支持 `--json`，便于脚本和 Agent 解析。
+- `ncm version`：输出版本和构建 commit，安装器可据此检查更新。
+
+命令速查：
 
 ```bash
 ncm login
