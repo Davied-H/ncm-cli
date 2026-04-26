@@ -1,13 +1,14 @@
 # ncm-cli
 
-`ncm-cli` 是一个面向个人使用的网易云音乐命令行工具。当前已实现登录态校验、账号信息、歌单浏览与管理、歌曲、歌词和搜索。
+`ncm-cli` 是一个面向个人使用的网易云音乐命令行工具。当前已实现登录态校验、账号信息、歌单浏览与管理、歌曲、歌词、播放地址、每日推荐、播放记录和搜索。
 
-项目使用 Go 实现 CLI，复用网易云 Web 端的 `weapi` 调用模型。播放 URL 解析、每日推荐和播放记录暂未接入。桌面端播放通过网易云音乐的 `orpheus://` URL Scheme 调起本机客户端。
+项目使用 Go 实现 CLI，复用网易云 Web 端的 `weapi` 调用模型。播放 URL 受版权、会员、地区和登录态影响，可能返回空地址；桌面端播放通过网易云音乐的 `orpheus://` URL Scheme 调起本机客户端。
 
 适合这些场景：
 
 - 在终端快速查看当前网易云账号、歌单和歌曲信息。
 - 搜索歌曲或歌单，把结果用 `--json` 交给脚本继续处理。
+- 查看每日推荐、播放记录和歌曲播放地址。
 - 创建和整理自己的歌单：加歌、移除歌曲、重命名、改标签、改描述、删除测试歌单。
 - 在 macOS 上把歌曲推送给网易云音乐桌面端播放。
 - 给自动化脚本、Agent 或个人工具链提供稳定的网易云音乐 CLI 入口。
@@ -45,12 +46,16 @@ npx skills add Davied-H/ncm-cli --skill ncm-cli --full-depth -g -y
 - `ncm playlist add/remove`：批量添加或移除歌曲。
 - `ncm playlist rename/tags/desc`：更新歌单名称、标签和描述。
 - `ncm playlist delete`：删除当前账号自建歌单。
+- `ncm playlist tidy`：提供面向 Agent 编排的歌单检查、筛选、比较、复制、移动和查重命令。
 - 写操作默认只允许操作当前账号自建的普通歌单；移除歌曲和删除歌单默认需要确认，可用 `--yes` 做非交互脚本。
 
 歌曲、歌词与搜索：
 
 - `ncm song`：查看歌曲元数据和权限信息。
 - `ncm lyric`：查看歌词，支持 `--raw` 只输出原始歌词。
+- `ncm url`：解析歌曲播放地址，并在不可播放时展示原因。
+- `ncm recommend songs`：查看每日推荐歌曲。
+- `ncm record`：查看最近一周或全部播放记录。
 - `ncm search suggest/song/playlist`：搜索建议、歌曲搜索和歌单搜索。
 
 桌面端播放与自动化：
@@ -73,9 +78,18 @@ ncm playlist delete <playlist-id> [--yes] [--json]
 ncm playlist rename <playlist-id> <name> [--json]
 ncm playlist tags <playlist-id> <tag...> [--json]
 ncm playlist desc <playlist-id> <text> [--json]
+ncm playlist tidy inspect <playlist-id> [--json]
+ncm playlist tidy filter <playlist-id> [--artist <text>] [--album <text>] [--name <text>] [--playable yes|no] [--json]
+ncm playlist tidy diff <source-playlist-id> <target-playlist-id> [--json]
+ncm playlist tidy apply <source-playlist-id> --to <target-playlist-id> --song-id <song-id> [--song-id <song-id>...] [--yes] [--json]
+ncm playlist tidy move <source-playlist-id> --to <target-playlist-id> --song-id <song-id> [--song-id <song-id>...] [--yes] [--json]
+ncm playlist tidy duplicates <playlist-id> [--apply] [--yes] [--json]
 ncm song <song-id> [--json]
+ncm url <song-id> [--level standard|higher|exhigh|lossless|hires|jyeffect|sky|jymaster] [--json]
 ncm play <song-id> [--print-url]
 ncm lyric <song-id> [--raw]
+ncm recommend songs [--limit 30] [--json]
+ncm record [--week|--all] [--limit 30] [--json]
 ncm search suggest <keyword> [--json]
 ncm search song <keyword> [--limit 30] [--offset 0] [--json]
 ncm search playlist <keyword> [--limit 30] [--offset 0] [--json]
@@ -93,28 +107,31 @@ ncm version [--json]
 
 环境要求：
 
-- Go 1.24+
+- Node.js/npm，供 `npx` 运行安装器
 - Chrome，供 `ncm login` 打开网易云 Web 登录
-- Go Playwright driver。默认使用系统 Chrome，不会下载 Playwright Chromium 浏览器包
+- Playwright driver。安装器可提前安装；如果未安装，`ncm login` 会在首次使用时自动准备。默认使用系统 Chrome，不会下载 Playwright Chromium 浏览器包
 
-发布到 GitHub 后，推荐直接从 GitHub 安装 CLI 和必需的 Playwright driver：
+开发或从源码构建时才需要 Go 1.24+。
+
+发布到 GitHub Release 后，推荐直接从 GitHub 安装 CLI 和 Playwright driver：
 
 ```bash
 npx --yes github:Davied-H/ncm-cli install --dir ~/.local/bin --with-playwright-driver
 ```
+
+安装器会优先下载当前平台的 Release 预编译二进制，默认写入 `~/.local/bin/ncm`，因此普通安装不需要本机 Go 构建环境。
 
 国内网络环境推荐显式使用镜像：
 
 ```bash
 PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright \
-GOPROXY=https://goproxy.cn,direct \
 npx --yes github:Davied-H/ncm-cli install --dir ~/.local/bin --with-playwright-driver
 ```
 
-在仓库目录内开发时，可以用本地 `npx` 安装：
+在仓库目录内开发时，可以用本地源码构建安装：
 
 ```bash
-npx . install --dir ~/.local/bin --with-playwright-driver
+npx . install --dir ~/.local/bin --build-from-source --with-playwright-driver
 ```
 
 如果将来发布到 npm，也可以远程安装：
@@ -123,19 +140,18 @@ npx . install --dir ~/.local/bin --with-playwright-driver
 npx ncm-cli@latest install --dir ~/.local/bin --with-playwright-driver
 ```
 
-安装器会编译 Go CLI，并把二进制写入指定目录，默认是 `~/.local/bin/ncm`。由于 CLI 需要登录网易云才能使用主要功能，Playwright driver 是必需依赖，安装命令应保留 `--with-playwright-driver`。
+由于 CLI 需要登录网易云才能使用主要功能，建议安装命令保留 `--with-playwright-driver`。这个步骤由已安装的 `ncm` 自己完成，不再通过 `go run` 安装。
 
-检查本机 CLI 是否落后于 GitHub `main` 最新版本：
+检查本机 CLI 是否落后于 GitHub 最新 Release：
 
 ```bash
 npx --yes github:Davied-H/ncm-cli check-update --dir ~/.local/bin --json
 ```
 
-从 GitHub 拉取最新源码并更新本机 CLI：
+从 GitHub Release 更新本机 CLI：
 
 ```bash
 PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright \
-GOPROXY=https://goproxy.cn,direct \
 npx --yes github:Davied-H/ncm-cli update --dir ~/.local/bin --with-playwright-driver
 ```
 
@@ -143,23 +159,20 @@ npx --yes github:Davied-H/ncm-cli update --dir ~/.local/bin --with-playwright-dr
 
 ```bash
 PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright \
-GOPROXY=https://goproxy.cn,direct \
-go run github.com/playwright-community/playwright-go/cmd/playwright@v0.5700.1 --version
+ncm driver install
 ```
 
-上面的命令只会准备 Go Playwright driver 并输出版本，不会下载 Chromium。如果机器没有 Chrome，可以额外安装 Playwright Chromium：
+上面的命令只会准备 Playwright driver，不会下载 Chromium。如果机器没有 Chrome，可以额外安装 Playwright Chromium：
 
 ```bash
 PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright \
-GOPROXY=https://goproxy.cn,direct \
-go run github.com/playwright-community/playwright-go/cmd/playwright@v0.5700.1 install chromium
+ncm driver install --browser
 ```
 
 或在安装 CLI 时一并安装：
 
 ```bash
 PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright \
-GOPROXY=https://goproxy.cn,direct \
 npx --yes github:Davied-H/ncm-cli install --dir ~/.local/bin --with-playwright-browser
 ```
 
@@ -223,12 +236,32 @@ go run ./cmd/ncm playlist delete 17924063236
 
 创建歌单和更新描述依赖网易云页面运行时的 `checkToken`，命令会短暂复用登录时的 Chrome profile。
 
+整理歌单：
+
+```bash
+go run ./cmd/ncm playlist tidy inspect 17924063236 --json
+go run ./cmd/ncm playlist tidy filter 17924063236 --artist 周杰伦 --json
+go run ./cmd/ncm playlist tidy diff 17924063236 490155105 --json
+go run ./cmd/ncm playlist tidy apply 17924063236 --to 490155105 --song-id 210049 --yes
+go run ./cmd/ncm playlist tidy move 17924063236 --to 490155105 --song-id 210049 --yes
+go run ./cmd/ncm playlist tidy duplicates 17924063236
+```
+
 查询歌曲和歌词：
 
 ```bash
 go run ./cmd/ncm song 210049
+go run ./cmd/ncm url 210049 --level exhigh
 go run ./cmd/ncm play 210049 --print-url
 go run ./cmd/ncm lyric 210049 --raw
+```
+
+查看推荐和播放记录：
+
+```bash
+go run ./cmd/ncm recommend songs --limit 5
+go run ./cmd/ncm record --week --limit 5
+go run ./cmd/ncm record --all --limit 5 --json
 ```
 
 搜索：

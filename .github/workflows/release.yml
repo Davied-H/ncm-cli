@@ -1,0 +1,110 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag, for example v0.2.0'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout requested tag
+        if: github.event_name == 'workflow_dispatch'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --tags --force
+          if git rev-parse -q --verify "refs/tags/${{ inputs.tag }}" >/dev/null; then
+            git checkout "refs/tags/${{ inputs.tag }}"
+          fi
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.x'
+          cache: true
+
+      - name: Test
+        run: go test ./...
+
+      - name: Build release binaries
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          tag="${GITHUB_REF_NAME}"
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+            tag="${{ inputs.tag }}"
+          fi
+          version="${tag#v}"
+          commit="$(git rev-parse --short=12 HEAD)"
+
+          mkdir -p dist
+          targets=(
+            "darwin amd64"
+            "darwin arm64"
+            "linux amd64"
+            "linux arm64"
+            "windows amd64"
+            "windows arm64"
+          )
+
+          for target in "${targets[@]}"; do
+            read -r goos goarch <<<"${target}"
+            asset="ncm_${goos}_${goarch}"
+            if [[ "${goos}" == "windows" ]]; then
+              asset="${asset}.exe"
+            fi
+            echo "Building ${asset}"
+            CGO_ENABLED=0 GOOS="${goos}" GOARCH="${goarch}" \
+              go build -trimpath \
+                -ldflags "-s -w -X main.version=${version} -X main.commit=${commit}" \
+                -o "dist/${asset}" ./cmd/ncm
+          done
+
+          (cd dist && sha256sum ncm_* > checksums.txt)
+          cat > dist/release-notes.md <<EOF
+          ncm-cli ${tag}
+
+          - 提供 macOS、Linux、Windows 的 amd64/arm64 预编译二进制。
+          - 安装器会优先从 GitHub Release 下载对应平台二进制，不再要求用户本地安装 Go 构建环境。
+          - \`ncm login\` 仍需要 Chrome；Playwright driver 可由安装器通过 \`--with-playwright-driver\` 准备，也会在首次登录时自动准备。
+          EOF
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          tag="${GITHUB_REF_NAME}"
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+            tag="${{ inputs.tag }}"
+          fi
+          target="$(git rev-parse HEAD)"
+
+          if gh release view "${tag}" >/dev/null 2>&1; then
+            gh release upload "${tag}" dist/ncm_* dist/checksums.txt --clobber
+            gh release edit "${tag}" --title "${tag}" --notes-file dist/release-notes.md
+          else
+            gh release create "${tag}" dist/ncm_* dist/checksums.txt \
+              --title "${tag}" \
+              --notes-file dist/release-notes.md \
+              --target "${target}"
+          fi

@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/playwright-community/playwright-go"
+
+	"ncm-cli/internal/pwdriver"
 )
 
 const defaultTimeout = 30 * time.Second
@@ -23,9 +25,9 @@ func Get(ctx context.Context, profileDir string, storageStatePath string, timeou
 	}
 	timeoutMS := float64(timeout.Milliseconds())
 
-	pw, err := playwright.Run()
+	pw, err := pwdriver.Run(os.Stdout, os.Stderr)
 	if err != nil {
-		return "", fmt.Errorf("启动 Playwright 失败，请先安装 driver：go run github.com/playwright-community/playwright-go/cmd/playwright@v0.5700.1 install chromium: %w", err)
+		return "", fmt.Errorf("启动 Playwright 失败，请先安装 driver：ncm driver install: %w", err)
 	}
 	defer pw.Stop()
 

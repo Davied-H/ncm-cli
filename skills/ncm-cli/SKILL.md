@@ -19,7 +19,6 @@ If installing from the published GitHub repository, use:
 
 ```bash
 PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright \
-GOPROXY=https://goproxy.cn,direct \
 npx --yes github:Davied-H/ncm-cli install --dir ~/.local/bin --with-playwright-driver
 ```
 
@@ -29,27 +28,24 @@ If working inside the `ncm-cli` repository, install from the local package:
 
 ```bash
 PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright \
-GOPROXY=https://goproxy.cn,direct \
-npx . install --dir ~/.local/bin --with-playwright-driver
+npx . install --dir ~/.local/bin --build-from-source --with-playwright-driver
 ```
 
 If the package has also been published to npm, install remotely:
 
 ```bash
 PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright \
-GOPROXY=https://goproxy.cn,direct \
 npx ncm-cli@latest install --dir ~/.local/bin --with-playwright-driver
 ```
 
 If `~/.local/bin` is not on `PATH`, either add it for the user or run the installed binary by absolute path.
 
-Keep `--with-playwright-driver` in the install command. The Go Playwright driver is required because `ncm login` opens NetEase Cloud Music Web in Chrome, and most CLI features require login state. This installs the Playwright Go driver only; it does not download Playwright Chromium.
+Prefer keeping `--with-playwright-driver` in the install command. The Playwright driver is required because `ncm login` opens NetEase Cloud Music Web in Chrome, and most CLI features require login state. The installer downloads the prebuilt GitHub Release binary first, then runs `ncm driver install`; it does not require Go on the target machine.
 
 If Chrome is unavailable on the machine, install the bundled Playwright Chromium browser instead:
 
 ```bash
 PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright \
-GOPROXY=https://goproxy.cn,direct \
 npx --yes github:Davied-H/ncm-cli install --dir ~/.local/bin --with-playwright-browser
 ```
 
@@ -61,13 +57,12 @@ When the user asks to install, update, or verify whether their `ncm` CLI is curr
 npx --yes github:Davied-H/ncm-cli check-update --dir ~/.local/bin --json
 ```
 
-This compares the installed `ncm version --json` output with the latest `package.json` version and latest `main` commit from `Davied-H/ncm-cli` on GitHub.
+This compares the installed `ncm version --json` output with the latest GitHub Release from `Davied-H/ncm-cli`.
 
-If an update is available, reinstall from the latest GitHub source:
+If an update is available, reinstall from the latest GitHub Release:
 
 ```bash
 PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright \
-GOPROXY=https://goproxy.cn,direct \
 npx --yes github:Davied-H/ncm-cli update --dir ~/.local/bin --with-playwright-driver
 ```
 
@@ -191,7 +186,6 @@ For a full GitHub-based setup, install the skill first, then install the CLI:
 ```bash
 npx skills add Davied-H/ncm-cli --skill ncm-cli --full-depth -g -y
 PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright \
-GOPROXY=https://goproxy.cn,direct \
 npx --yes github:Davied-H/ncm-cli install --dir ~/.local/bin --with-playwright-driver
 ```
 
@@ -200,7 +194,6 @@ To refresh both the agent skill and the CLI from GitHub:
 ```bash
 npx skills add Davied-H/ncm-cli --skill ncm-cli --full-depth -g -y
 PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright \
-GOPROXY=https://goproxy.cn,direct \
 npx --yes github:Davied-H/ncm-cli update --dir ~/.local/bin --with-playwright-driver
 ```
 

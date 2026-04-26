@@ -179,6 +179,57 @@ type SearchPlaylistResult struct {
 	Playlists     []Playlist `json:"playlists"`
 }
 
+type PlayerURLResponse struct {
+	Code int             `json:"code"`
+	Data []PlayerURLItem `json:"data"`
+}
+
+type PlayerURLItem struct {
+	ID                 int64               `json:"id"`
+	URL                string              `json:"url"`
+	BR                 int                 `json:"br"`
+	Code               int                 `json:"code"`
+	Fee                int                 `json:"fee"`
+	Level              string              `json:"level"`
+	FreeTrialPrivilege *FreeTrialPrivilege `json:"freeTrialPrivilege,omitempty"`
+}
+
+type FreeTrialPrivilege struct {
+	CannotListenReason string `json:"cannotListenReason,omitempty"`
+}
+
+type RecommendSongsResponse struct {
+	Code      int                     `json:"code"`
+	Recommend []Song                  `json:"recommend,omitempty"`
+	Data      RecommendSongsDataBlock `json:"data,omitempty"`
+}
+
+type RecommendSongsDataBlock struct {
+	DailySongs []Song `json:"dailySongs,omitempty"`
+}
+
+func (r *RecommendSongsResponse) Songs() []Song {
+	if r == nil {
+		return nil
+	}
+	if len(r.Recommend) > 0 {
+		return r.Recommend
+	}
+	return r.Data.DailySongs
+}
+
+type PlayRecordResponse struct {
+	Code     int              `json:"code"`
+	WeekData []PlayRecordItem `json:"weekData"`
+	AllData  []PlayRecordItem `json:"allData"`
+}
+
+type PlayRecordItem struct {
+	PlayCount int  `json:"playCount"`
+	Score     int  `json:"score"`
+	Song      Song `json:"song"`
+}
+
 func (c *Client) Me(ctx context.Context) (*AccountResponse, error) {
 	var out AccountResponse
 	err := c.WeAPI(ctx, "/api/w/nuser/account/get", nil, &out)
@@ -316,6 +367,35 @@ func (c *Client) SearchSongs(ctx context.Context, keyword string, limit, offset 
 func (c *Client) SearchPlaylists(ctx context.Context, keyword string, limit, offset int) (*SearchPlaylistResponse, error) {
 	var out SearchPlaylistResponse
 	err := c.WeAPI(ctx, "/api/cloudsearch/get/web", cloudSearchPayload(keyword, 1000, limit, offset), &out)
+	return &out, err
+}
+
+func (c *Client) PlayerURL(ctx context.Context, id int64, level string) (*PlayerURLResponse, error) {
+	idsValue, err := json.Marshal([]int64{id})
+	if err != nil {
+		return nil, err
+	}
+	var out PlayerURLResponse
+	err = c.WeAPI(ctx, "/api/song/enhance/player/url/v1", map[string]any{
+		"ids":        string(idsValue),
+		"level":      level,
+		"encodeType": "aac",
+	}, &out)
+	return &out, err
+}
+
+func (c *Client) RecommendSongs(ctx context.Context) (*RecommendSongsResponse, error) {
+	var out RecommendSongsResponse
+	err := c.WeAPI(ctx, "/api/v2/discovery/recommend/songs", nil, &out)
+	return &out, err
+}
+
+func (c *Client) PlayRecord(ctx context.Context, uid int64, typ int) (*PlayRecordResponse, error) {
+	var out PlayRecordResponse
+	err := c.WeAPI(ctx, "/api/v1/play/record", map[string]any{
+		"uid":  uid,
+		"type": typ,
+	}, &out)
 	return &out, err
 }
 

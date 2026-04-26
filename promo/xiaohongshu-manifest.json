@@ -1,0 +1,31 @@
+{
+  "title": "把网易云音乐搬进终端",
+  "content": "最近做了一个个人向的网易云音乐命令行工具：ncm-cli。\n\n它适合经常在终端里工作、又想快速整理音乐库的人：\n\n- ncm me 查看当前账号\n- ncm playlist list/show 浏览歌单和歌曲\n- ncm search song 搜索歌曲\n- ncm lyric 直接看歌词\n- ncm playlist add/remove/rename/tags/desc 管理自己的歌单\n- ncm play 在 macOS 上调起网易云音乐桌面端播放\n- 主要读取命令支持 --json，可以接脚本、快捷指令或 Agent\n\n首次使用先执行 ncm login，扫码登录后就能把网易云音乐放进自己的终端工作流里。\n\nGitHub：Davied-H/ncm-cli\n\n非官方个人工具，不隶属于网易云音乐。播放和版权能力以账号、地区和客户端实际状态为准。\n\n想看安装方法可以留言，我整理在评论区。",
+  "images": [
+    "/Users/dong/Desktop/ncm-cli/promo/xiaohongshu-ncm-cli-lifestyle.png"
+  ],
+  "topicIds": [
+    {
+      "id": "5d51233f000000000f02f90c",
+      "name": "网易云音乐"
+    },
+    {
+      "id": "61a997f20000000001008095",
+      "name": "效率工具"
+    },
+    {
+      "id": "601b709500000000010080ca",
+      "name": "开源项目"
+    },
+    {
+      "id": "637a11630000000001002cae",
+      "name": "程序员工具"
+    },
+    {
+      "id": "653b51db0000000017029456",
+      "name": "命令行工具"
+    }
+  ],
+  "visibility": "public",
+  "copyable": true
+}

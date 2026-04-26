@@ -1,0 +1,598 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ncm-cli 小红书生活化推广海报</title>
+    <style>
+      :root {
+        --paper: #fffaf1;
+        --paper-deep: #f3e7d4;
+        --ink: #202124;
+        --muted: #69625a;
+        --red: #d9443f;
+        --green: #6f8f70;
+        --blue: #7089a8;
+        --yellow: #e9bd58;
+        --line: rgba(62, 50, 37, 0.14);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 100%;
+        min-height: 100%;
+        margin: 0;
+      }
+
+      body {
+        display: grid;
+        place-items: center;
+        background: #d9c7ad;
+        font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
+      }
+
+      .poster {
+        position: relative;
+        width: 1242px;
+        height: 1660px;
+        overflow: hidden;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 20% 18%, rgba(255, 255, 255, 0.94), transparent 30%),
+          linear-gradient(160deg, #f8eddc 0%, #f0dcc0 48%, #dfc5a3 100%);
+      }
+
+      .poster::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        opacity: 0.34;
+        background-image:
+          linear-gradient(rgba(115, 89, 57, 0.14) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(115, 89, 57, 0.1) 1px, transparent 1px);
+        background-size: 46px 46px;
+      }
+
+      .paper {
+        position: absolute;
+        left: 62px;
+        top: 48px;
+        width: 1118px;
+        height: 1552px;
+        border-radius: 10px;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 250, 241, 0.95)),
+          var(--paper);
+        box-shadow:
+          0 28px 80px rgba(71, 48, 23, 0.24),
+          inset 0 0 0 1px rgba(255, 255, 255, 0.65);
+        transform: rotate(-0.8deg);
+      }
+
+      .paper::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        opacity: 0.11;
+        background-image:
+          repeating-linear-gradient(0deg, transparent 0, transparent 13px, rgba(120, 90, 50, 0.3) 14px),
+          repeating-linear-gradient(90deg, transparent 0, transparent 17px, rgba(255, 255, 255, 0.9) 18px);
+        mix-blend-mode: multiply;
+        pointer-events: none;
+      }
+
+      .tape {
+        position: absolute;
+        width: 260px;
+        height: 62px;
+        border-radius: 5px;
+        background: rgba(241, 222, 187, 0.78);
+        box-shadow: 0 10px 18px rgba(87, 54, 22, 0.11);
+      }
+
+      .tape.top-left {
+        left: 12px;
+        top: 92px;
+        transform: rotate(-26deg);
+      }
+
+      .tape.bottom {
+        left: 114px;
+        bottom: 96px;
+        width: 420px;
+        transform: rotate(-3deg);
+      }
+
+      .content {
+        position: relative;
+        z-index: 2;
+        height: 100%;
+        padding: 92px 92px 70px;
+      }
+
+      .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 64px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        font-size: 30px;
+        font-weight: 850;
+        letter-spacing: 0;
+      }
+
+      .brand-mark {
+        display: grid;
+        width: 64px;
+        height: 64px;
+        place-items: center;
+        border-radius: 20px;
+        color: #fff9ee;
+        background: var(--red);
+        font-size: 34px;
+        font-weight: 900;
+        box-shadow: 0 14px 30px rgba(217, 68, 63, 0.28);
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 13px 20px;
+        border: 2px solid rgba(32, 33, 36, 0.1);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.55);
+        color: var(--muted);
+        font-size: 22px;
+        font-weight: 750;
+      }
+
+      .hero {
+        margin-bottom: 46px;
+      }
+
+      .share-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 28px;
+        color: var(--red);
+        font-size: 28px;
+        font-weight: 900;
+      }
+
+      .share-label span:first-child {
+        display: grid;
+        width: 44px;
+        height: 44px;
+        place-items: center;
+        border: 3px solid currentColor;
+        border-radius: 50%;
+        font-size: 26px;
+      }
+
+      h1 {
+        max-width: 940px;
+        margin: 0;
+        font-size: 100px;
+        line-height: 1.08;
+        font-weight: 950;
+        letter-spacing: 0;
+      }
+
+      h1 .red {
+        color: var(--red);
+      }
+
+      .subtitle {
+        max-width: 880px;
+        margin: 28px 0 0;
+        color: #3b3935;
+        font-size: 34px;
+        line-height: 1.55;
+        font-weight: 700;
+      }
+
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 18px;
+        margin-top: 32px;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        min-height: 62px;
+        padding: 0 24px;
+        border-radius: 999px;
+        color: #242321;
+        background: #fff;
+        font-size: 26px;
+        font-weight: 850;
+        box-shadow: 0 14px 28px rgba(99, 72, 42, 0.1);
+      }
+
+      .chip:nth-child(1) {
+        background: #f4ddd8;
+      }
+
+      .chip:nth-child(2) {
+        background: #e5efd9;
+      }
+
+      .chip:nth-child(3) {
+        background: #f5e3ad;
+      }
+
+      .chip:nth-child(4) {
+        background: #dfe7ee;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 0.86fr 1.14fr;
+        gap: 28px;
+        align-items: start;
+      }
+
+      .note,
+      .playlist,
+      .terminal,
+      .json-note {
+        border: 1px solid var(--line);
+        box-shadow: 0 18px 48px rgba(94, 67, 33, 0.13);
+      }
+
+      .playlist,
+      .json-note {
+        display: none;
+      }
+
+      .note {
+        min-height: 344px;
+        padding: 34px 34px 30px;
+        border-radius: 7px;
+        background: #fff6df;
+        transform: rotate(-1.6deg);
+      }
+
+      .note h2,
+      .playlist h2 {
+        margin: 0 0 26px;
+        font-size: 34px;
+        line-height: 1.2;
+        font-weight: 900;
+      }
+
+      .todo {
+        display: grid;
+        gap: 19px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        color: #3a332b;
+        font-size: 26px;
+        font-weight: 730;
+      }
+
+      .todo li {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .box {
+        display: grid;
+        width: 28px;
+        height: 28px;
+        place-items: center;
+        border: 2px solid rgba(32, 33, 36, 0.55);
+        border-radius: 6px;
+        color: var(--red);
+        font-size: 20px;
+        font-weight: 900;
+        flex: 0 0 auto;
+      }
+
+      .playlist {
+        margin-top: 28px;
+        padding: 28px;
+        border-radius: 24px;
+        background: rgba(255, 255, 255, 0.78);
+      }
+
+      .playlist-head {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        margin-bottom: 22px;
+      }
+
+      .cover {
+        width: 92px;
+        height: 92px;
+        border-radius: 20px;
+        background:
+          linear-gradient(150deg, rgba(217, 68, 63, 0.85), transparent 50%),
+          linear-gradient(35deg, #f1ca6b, #7fa783);
+      }
+
+      .playlist-title {
+        font-size: 28px;
+        font-weight: 900;
+      }
+
+      .playlist-sub {
+        margin-top: 6px;
+        color: var(--muted);
+        font-size: 20px;
+        font-weight: 700;
+      }
+
+      .songs {
+        display: grid;
+        gap: 15px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        color: #4a443d;
+        font-size: 22px;
+        font-weight: 720;
+      }
+
+      .songs li {
+        display: grid;
+        grid-template-columns: 34px 1fr auto;
+        gap: 12px;
+        align-items: center;
+        padding-bottom: 12px;
+        border-bottom: 1px solid rgba(70, 54, 36, 0.11);
+      }
+
+      .terminal {
+        overflow: hidden;
+        border-radius: 26px;
+        background: #17191c;
+        color: #f7f3eb;
+      }
+
+      .terminal-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 24px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.055);
+      }
+
+      .dots {
+        display: flex;
+        gap: 10px;
+      }
+
+      .dot {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+      }
+
+      .dot.red {
+        background: #ff625c;
+      }
+
+      .dot.yellow {
+        background: #ffc04f;
+      }
+
+      .dot.green {
+        background: #34c86a;
+      }
+
+      .terminal-title {
+        color: #b8bec7;
+        font: 700 18px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      }
+
+      pre {
+        margin: 0;
+        padding: 32px 34px 34px;
+        font: 700 23px/1.58 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        white-space: pre-wrap;
+      }
+
+      .prompt {
+        color: #4de2c9;
+      }
+
+      .arg {
+        color: #ffd159;
+      }
+
+      .comment {
+        color: #98a0ac;
+      }
+
+      .ok {
+        color: #99d777;
+      }
+
+      .json-note {
+        position: relative;
+        margin: 28px 0 0 64px;
+        padding: 28px 32px;
+        border-radius: 8px;
+        background: #fff5e2;
+        transform: rotate(2deg);
+      }
+
+      .json-note::before {
+        content: "";
+        position: absolute;
+        left: -18px;
+        top: 20px;
+        bottom: 20px;
+        width: 10px;
+        border-radius: 999px;
+        background: repeating-linear-gradient(180deg, #d6b68c 0 12px, transparent 12px 23px);
+      }
+
+      .json-note h3 {
+        margin: 0 0 16px;
+        color: var(--red);
+        font-size: 28px;
+        font-weight: 950;
+      }
+
+      .json-note p {
+        margin: 0;
+        color: #3c352d;
+        font-size: 24px;
+        line-height: 1.48;
+        font-weight: 750;
+      }
+
+      .footer {
+        position: absolute;
+        left: 92px;
+        right: 92px;
+        bottom: 70px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 26px;
+      }
+
+      .footer-main {
+        display: inline-flex;
+        align-items: center;
+        gap: 18px;
+        padding: 18px 30px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.74);
+        box-shadow: 0 14px 30px rgba(94, 67, 33, 0.12);
+        font-size: 32px;
+        font-weight: 950;
+      }
+
+      .heart {
+        color: var(--red);
+        font-size: 38px;
+      }
+
+      .footer-note {
+        max-width: 420px;
+        color: #655d54;
+        text-align: right;
+        font-size: 22px;
+        line-height: 1.42;
+        font-weight: 750;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="poster" aria-label="ncm-cli 小红书生活化推广海报">
+      <div class="paper"></div>
+      <div class="tape top-left"></div>
+      <div class="tape bottom"></div>
+      <section class="content">
+        <header class="header">
+          <div class="brand">
+            <div class="brand-mark">n</div>
+            <div>ncm-cli</div>
+          </div>
+          <div class="tag">个人开源分享</div>
+        </header>
+
+        <section class="hero">
+          <div class="share-label"><span>♪</span><span>开发者日常小工具</span></div>
+          <h1>把<span class="red">网易云音乐</span><br />搬进终端</h1>
+          <p class="subtitle">一个自用的歌单整理小工具：搜歌、看歌词、管歌单，还能把结果交给脚本和 Agent 继续处理。</p>
+          <div class="chips">
+            <div class="chip">搜歌</div>
+            <div class="chip">看歌词</div>
+            <div class="chip">管歌单</div>
+            <div class="chip">JSON</div>
+          </div>
+        </section>
+
+        <section class="layout">
+          <div>
+            <article class="note">
+              <h2>我想要的音乐工作流</h2>
+              <ul class="todo">
+                <li><span class="box">✓</span><span>快速查当前账号</span></li>
+                <li><span class="box">✓</span><span>搜索歌曲和歌单</span></li>
+                <li><span class="box">✓</span><span>直接读原始歌词</span></li>
+                <li><span class="box">✓</span><span>整理自己的歌单</span></li>
+                <li><span class="box">✓</span><span>输出 JSON 接自动化</span></li>
+              </ul>
+            </article>
+
+            <article class="playlist">
+              <div class="playlist-head">
+                <div class="cover"></div>
+                <div>
+                  <div class="playlist-title">周末整理歌单</div>
+                  <div class="playlist-sub">终端里顺手完成</div>
+                </div>
+              </div>
+              <ol class="songs">
+                <li><span>01</span><span>搜索想听的歌</span><span>ncm</span></li>
+                <li><span>02</span><span>看歌词确认版本</span><span>lyric</span></li>
+                <li><span>03</span><span>添加到自建歌单</span><span>playlist</span></li>
+                <li><span>04</span><span>结果留给脚本处理</span><span>json</span></li>
+              </ol>
+            </article>
+          </div>
+
+          <div>
+            <article class="terminal">
+              <div class="terminal-head">
+                <div class="dots">
+                  <span class="dot red"></span>
+                  <span class="dot yellow"></span>
+                  <span class="dot green"></span>
+                </div>
+                <div class="terminal-title">~/music-workflow</div>
+              </div>
+              <pre><span class="prompt">$</span> ncm search song <span class="arg">周杰伦</span> --json
+<span class="ok">1.</span> 晴天
+<span class="ok">2.</span> 稻香
+<span class="ok">3.</span> 夜曲
+
+<span class="prompt">$</span> ncm lyric <span class="arg">210049</span> --raw
+<span class="comment"># 原始歌词直接读</span>
+
+<span class="prompt">$</span> ncm playlist add <span class="arg">123456 210049</span>
+<span class="comment"># 添加到自己的歌单</span>
+
+<span class="prompt">$</span> ncm playlist show <span class="arg">123456</span> --json
+<span class="comment"># 给脚本和 Agent 继续处理</span></pre>
+            </article>
+
+            <article class="json-note">
+              <h3>为什么做成 CLI？</h3>
+              <p>因为它可以放进自己的终端工作流：查资料、整理歌单、写脚本时，不用频繁切窗口。</p>
+            </article>
+          </div>
+        </section>
+
+        <footer class="footer">
+          <div class="footer-main"><span class="heart">♡</span><span>ncm-cli · 个人开源分享</span></div>
+          <div class="footer-note">非官方个人工具<br />播放能力以账号和客户端状态为准</div>
+        </footer>
+      </section>
+    </main>
+  </body>
+</html>

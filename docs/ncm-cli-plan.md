@@ -217,14 +217,20 @@ ncm playlist delete <playlist-id> [--yes] [--json]
 ncm playlist rename <playlist-id> <name> [--json]
 ncm playlist tags <playlist-id> <tag...> [--json]
 ncm playlist desc <playlist-id> <text> [--json]
+ncm playlist tidy inspect <playlist-id> [--json]
+ncm playlist tidy filter <playlist-id> [--artist <text>] [--album <text>] [--name <text>] [--playable yes|no] [--json]
+ncm playlist tidy diff <source-playlist-id> <target-playlist-id> [--json]
+ncm playlist tidy apply <source-playlist-id> --to <target-playlist-id> --song-id <song-id> [--song-id <song-id>...] [--yes] [--json]
+ncm playlist tidy move <source-playlist-id> --to <target-playlist-id> --song-id <song-id> [--song-id <song-id>...] [--yes] [--json]
+ncm playlist tidy duplicates <playlist-id> [--apply] [--yes] [--json]
 ncm song <song-id> [--json]
 ncm lyric <song-id> [--raw]
 ncm search suggest <keyword> [--json]
 ncm search song <keyword> [--limit 30] [--offset 0] [--json]
 ncm search playlist <keyword> [--limit 30] [--offset 0] [--json]
-ncm url <song-id> [--level standard|exhigh|lossless|hires]
-ncm recommend songs
-ncm record [--week|--all]
+ncm url <song-id> [--level standard|higher|exhigh|lossless|hires|jyeffect|sky|jymaster] [--json]
+ncm recommend songs [--limit 30] [--json]
+ncm record [--week|--all] [--limit 30] [--json]
 ```
 
 第一阶段只读功能：
@@ -242,11 +248,18 @@ ncm record [--week|--all]
 2. `playlist add/remove`：向当前账号自建歌单添加或移除歌曲，移除默认需要确认。
 3. `playlist delete`：删除当前账号自建歌单，默认需要输入歌单 ID 确认。
 4. `playlist rename/tags/desc`：更新歌单名、标签和描述。
+5. `playlist tidy`：提供面向 Agent 编排的歌单检查、筛选、比较、复制、移动和查重原语；批量写操作默认确认，可用 `--yes` 脚本化。
+
+已实现推荐、播放地址和播放记录：
+
+1. `url`：调用播放地址接口，返回 `ID/LEVEL/BR/CODE/URL/REASON`；`url` 为空时不视为 CLI 错误。
+2. `recommend songs`：读取每日推荐歌曲，表格输出可用 `--limit` 裁剪，`--json` 输出原始响应。
+3. `record`：读取当前账号播放记录，默认展示最近一周，`--all` 展示全部记录。
 
 后续增强：
 
 1. 搜索结果分页。
-2. 播放地址解析和外部播放器集成。
+2. 外部播放器集成。
 3. 导出歌单为 JSON/CSV/M3U。
 
 ## 技术方案

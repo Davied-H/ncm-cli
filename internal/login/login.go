@@ -11,6 +11,7 @@ import (
 	"github.com/playwright-community/playwright-go"
 
 	"ncm-cli/internal/config"
+	"ncm-cli/internal/pwdriver"
 )
 
 type Options struct {
@@ -31,8 +32,8 @@ type accountResponse struct {
 }
 
 const (
-	installPlaywrightDriverCommand  = "go run github.com/playwright-community/playwright-go/cmd/playwright@v0.5700.1 --version"
-	installPlaywrightBrowserCommand = "go run github.com/playwright-community/playwright-go/cmd/playwright@v0.5700.1 install chromium"
+	installPlaywrightDriverCommand  = "ncm driver install"
+	installPlaywrightBrowserCommand = "ncm driver install --browser"
 )
 
 func Run(ctx context.Context, opts Options) (*config.UserInfo, error) {
@@ -50,7 +51,7 @@ func Run(ctx context.Context, opts Options) (*config.UserInfo, error) {
 		opts.Stdout = io.Discard
 	}
 
-	pw, err := playwright.Run()
+	pw, err := pwdriver.Run(opts.Stdout, os.Stderr)
 	if err != nil {
 		return nil, fmt.Errorf("启动 Playwright 失败，请先安装 driver：%s: %w", installPlaywrightDriverCommand, err)
 	}

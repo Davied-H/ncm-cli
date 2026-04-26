@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -15,6 +16,7 @@ import (
 	"ncm-cli/internal/login"
 	"ncm-cli/internal/ncm"
 	"ncm-cli/internal/output"
+	"ncm-cli/internal/pwdriver"
 )
 
 var (
@@ -50,11 +52,43 @@ func newRootCmd() *cobra.Command {
 		newMeCmd(opts),
 		newPlaylistCmd(opts),
 		newSongCmd(opts),
+		newURLCmd(opts),
 		newPlayCmd(),
 		newLyricCmd(opts),
+		newRecommendCmd(opts),
+		newRecordCmd(opts),
 		newSearchCmd(opts),
 		newVersionCmd(),
+		newDriverCmd(),
 	)
+	return cmd
+}
+
+func newDriverCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "driver",
+		Short: "管理 Playwright driver",
+	}
+	cmd.AddCommand(newDriverInstallCmd())
+	return cmd
+}
+
+func newDriverInstallCmd() *cobra.Command {
+	var withBrowser bool
+	cmd := &cobra.Command{
+		Use:   "install",
+		Short: "安装 Playwright driver",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := pwdriver.Install(withBrowser, cmd.OutOrStdout(), cmd.ErrOrStderr()); err != nil {
+				return fmt.Errorf("安装 Playwright driver 失败: %w", err)
+			}
+			if withBrowser {
+				return output.Text(cmd.OutOrStdout(), "Playwright driver 和 Chromium 已安装。\n")
+			}
+			return output.Text(cmd.OutOrStdout(), "Playwright driver 已安装。\n")
+		},
+	}
+	cmd.Flags().BoolVar(&withBrowser, "browser", false, "同时安装 Playwright Chromium")
 	return cmd
 }
 
@@ -152,6 +186,7 @@ func newPlaylistCmd(opts *rootOptions) *cobra.Command {
 		newPlaylistRenameCmd(opts),
 		newPlaylistTagsCmd(opts),
 		newPlaylistDescCmd(opts),
+		newPlaylistTidyCmd(opts),
 	)
 	return cmd
 }
@@ -310,6 +345,53 @@ func newSongCmd(opts *rootOptions) *cobra.Command {
 	return cmd
 }
 
+func newURLCmd(opts *rootOptions) *cobra.Command {
+	var level string
+	var asJSON bool
+	cmd := &cobra.Command{
+		Use:   "url <song-id>",
+		Short: "解析歌曲播放地址",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if !validPlayerLevel(level) {
+				return fmt.Errorf("--level 不支持 %q，可选: %s", level, strings.Join(playerURLLevels(), ", "))
+			}
+			id, err := ncm.ParseID(args[0])
+			if err != nil {
+				return fmt.Errorf("song-id 无效: %w", err)
+			}
+			client, err := makeClient(opts)
+			if err != nil {
+				return err
+			}
+			ctx, cancel := commandContext(cmd, opts)
+			defer cancel()
+			res, err := client.PlayerURL(ctx, id, level)
+			if err != nil {
+				return err
+			}
+			if asJSON {
+				return output.JSON(cmd.OutOrStdout(), res)
+			}
+			rows := make([][]string, 0, len(res.Data))
+			for _, item := range res.Data {
+				rows = append(rows, []string{
+					strconv.FormatInt(item.ID, 10),
+					item.Level,
+					strconv.Itoa(item.BR),
+					strconv.Itoa(item.Code),
+					item.URL,
+					playerURLReason(item),
+				})
+			}
+			return output.Table(cmd.OutOrStdout(), []string{"ID", "LEVEL", "BR", "CODE", "URL", "REASON"}, rows)
+		},
+	}
+	cmd.Flags().StringVar(&level, "level", "exhigh", "音质等级")
+	cmd.Flags().BoolVar(&asJSON, "json", false, "输出 JSON")
+	return cmd
+}
+
 func newPlayCmd() *cobra.Command {
 	var printURL bool
 	cmd := &cobra.Command{
@@ -365,6 +447,115 @@ func newLyricCmd(opts *rootOptions) *cobra.Command {
 		},
 	}
 	cmd.Flags().BoolVar(&raw, "raw", false, "只输出原始歌词")
+	return cmd
+}
+
+func newRecommendCmd(opts *rootOptions) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "recommend",
+		Short: "每日推荐相关命令",
+	}
+	cmd.AddCommand(newRecommendSongsCmd(opts))
+	return cmd
+}
+
+func newRecommendSongsCmd(opts *rootOptions) *cobra.Command {
+	var limit int
+	var asJSON bool
+	cmd := &cobra.Command{
+		Use:   "songs",
+		Short: "显示每日推荐歌曲",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if limit <= 0 {
+				return fmt.Errorf("--limit 必须大于 0")
+			}
+			client, err := makeClient(opts)
+			if err != nil {
+				return err
+			}
+			ctx, cancel := commandContext(cmd, opts)
+			defer cancel()
+			res, err := client.RecommendSongs(ctx)
+			if err != nil {
+				return err
+			}
+			if asJSON {
+				return output.JSON(cmd.OutOrStdout(), res)
+			}
+			songs := limitSongs(res.Songs(), limit)
+			rows := make([][]string, 0, len(songs))
+			for _, song := range songs {
+				rows = append(rows, []string{
+					strconv.FormatInt(song.ID, 10),
+					song.Name,
+					ncm.ArtistsText(song.Artists),
+					song.Album.Name,
+					formatDuration(song.Duration),
+					formatSongPlay(song),
+				})
+			}
+			return output.Table(cmd.OutOrStdout(), []string{"ID", "NAME", "ARTISTS", "ALBUM", "DURATION", "PLAY"}, rows)
+		},
+	}
+	cmd.Flags().IntVar(&limit, "limit", 30, "表格展示数量")
+	cmd.Flags().BoolVar(&asJSON, "json", false, "输出 JSON")
+	return cmd
+}
+
+func newRecordCmd(opts *rootOptions) *cobra.Command {
+	var week bool
+	var all bool
+	var limit int
+	var asJSON bool
+	cmd := &cobra.Command{
+		Use:   "record",
+		Short: "显示播放记录",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if week && all {
+				return fmt.Errorf("--week 和 --all 不能同时使用")
+			}
+			if limit <= 0 {
+				return fmt.Errorf("--limit 必须大于 0")
+			}
+			client, err := makeClient(opts)
+			if err != nil {
+				return err
+			}
+			ctx, cancel := commandContext(cmd, opts)
+			defer cancel()
+			me, err := client.Me(ctx)
+			if err != nil {
+				return err
+			}
+			if me.Profile == nil || me.Profile.UserID == 0 {
+				return fmt.Errorf("无法从账号响应获取 userId")
+			}
+			res, err := client.PlayRecord(ctx, me.Profile.UserID, -1)
+			if err != nil {
+				return err
+			}
+			if asJSON {
+				return output.JSON(cmd.OutOrStdout(), res)
+			}
+			items := limitRecords(recordItems(res, all), limit)
+			rows := make([][]string, 0, len(items))
+			for _, item := range items {
+				rows = append(rows, []string{
+					strconv.FormatInt(item.Song.ID, 10),
+					item.Song.Name,
+					ncm.ArtistsText(item.Song.Artists),
+					item.Song.Album.Name,
+					strconv.Itoa(item.PlayCount),
+					strconv.Itoa(item.Score),
+				})
+			}
+			return output.Table(cmd.OutOrStdout(), []string{"ID", "NAME", "ARTISTS", "ALBUM", "PLAY_COUNT", "SCORE"}, rows)
+		},
+	}
+	cmd.Flags().BoolVar(&week, "week", false, "显示最近一周播放记录，默认选项")
+	cmd.Flags().BoolVar(&all, "all", false, "显示全部播放记录")
+	cmd.Flags().IntVar(&limit, "limit", 30, "表格展示数量")
+	cmd.Flags().BoolVar(&asJSON, "json", false, "输出 JSON")
 	return cmd
 }
 
@@ -574,4 +765,55 @@ func formatPrivilege(priv ncm.Privilege) string {
 		return "yes"
 	}
 	return "no"
+}
+
+func playerURLLevels() []string {
+	return []string{"standard", "higher", "exhigh", "lossless", "hires", "jyeffect", "sky", "jymaster"}
+}
+
+func validPlayerLevel(level string) bool {
+	for _, candidate := range playerURLLevels() {
+		if level == candidate {
+			return true
+		}
+	}
+	return false
+}
+
+func playerURLReason(item ncm.PlayerURLItem) string {
+	if item.FreeTrialPrivilege != nil {
+		return item.FreeTrialPrivilege.CannotListenReason
+	}
+	return ""
+}
+
+func formatSongPlay(song ncm.Song) string {
+	if song.Privilege == nil {
+		return ""
+	}
+	return formatPrivilege(*song.Privilege)
+}
+
+func limitSongs(songs []ncm.Song, limit int) []ncm.Song {
+	if limit < len(songs) {
+		return songs[:limit]
+	}
+	return songs
+}
+
+func limitRecords(records []ncm.PlayRecordItem, limit int) []ncm.PlayRecordItem {
+	if limit < len(records) {
+		return records[:limit]
+	}
+	return records
+}
+
+func recordItems(res *ncm.PlayRecordResponse, all bool) []ncm.PlayRecordItem {
+	if res == nil {
+		return nil
+	}
+	if all {
+		return res.AllData
+	}
+	return res.WeekData
 }
