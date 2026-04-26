@@ -1,0 +1,4 @@
+interface:
+  display_name: "NCM Playlist Organizer"
+  short_description: "Organize large NetEase Cloud Music playlists"
+  default_prompt: "Use $ncm-playlist-organizer to analyze my large NetEase Cloud Music playlist and propose split playlists."
