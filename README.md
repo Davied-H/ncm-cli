@@ -19,13 +19,30 @@
 请自动安装 ncm-cli。先访问并阅读安装文档：
 https://github.com/Davied-H/ncm-cli/blob/main/CLAUDE_CODE_CODEX_INSTALL.md
 
-按文档步骤执行安装：安装或更新 ncm-cli Skill，安装 ncm CLI 和必需的 Playwright driver，运行 `ncm --help` 与 `ncm version --json` 验证，并用 GitHub `check-update` 检测是否需要更新。需要登录时执行 `ncm login`，并等待我扫码或完成网页登录。不要输出或提交任何 cookie、csrf、storage-state.json 等登录态文件。
+按文档步骤执行安装：安装或更新仓库里的 ncm-cli / ncm-playlist-organizer Skills，安装 ncm CLI 和必需的 Playwright driver，运行 `ncm --help` 与 `ncm version --json` 验证，并用 GitHub `check-update` 检测是否需要更新。需要登录时执行 `ncm login`，并等待我扫码或完成网页登录。不要输出或提交任何 cookie、csrf、storage-state.json 等登录态文件。
 ```
 
-本仓库也包含代理 Skill：`skills/ncm-cli/SKILL.md`。发布到 GitHub 后，可用下面的方式安装到 Claude Code/Codex：
+本仓库也包含代理 Skills，可安装到 Claude Code/Codex：
+
+- `skills/ncm-cli/SKILL.md`：安装、配置和使用 `ncm` CLI。
+- `skills/ncm-playlist-organizer/SKILL.md`：分析大歌单、导出整理报告、生成拆分歌单计划。
+
+安装全部 Skills：
+
+```bash
+npx skills add Davied-H/ncm-cli --skill '*' --full-depth -g -y
+```
+
+只安装 CLI Skill：
 
 ```bash
 npx skills add Davied-H/ncm-cli --skill ncm-cli --full-depth -g -y
+```
+
+只安装歌单整理 Skill：
+
+```bash
+npx skills add Davied-H/ncm-cli --skill ncm-playlist-organizer --full-depth -g -y
 ```
 
 ## 已实现功能
