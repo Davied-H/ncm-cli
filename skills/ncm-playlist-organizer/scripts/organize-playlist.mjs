@@ -18,6 +18,104 @@ const cn = /[\u4e00-\u9fff]/;
 const kana = /[\u3040-\u30ff]/;
 const hangul = /[\uac00-\ud7af]/;
 
+const jpArtists = new Set([
+  "majiko",
+  "玉置浩二",
+  "SEKAI NO OWARI",
+  "Reol",
+  "德永英明",
+  "Aimer",
+  "あいみょん",
+  "北野武",
+  "ハンバート ハンバート",
+  "中島美嘉",
+  "KOKIA",
+  "平井 大",
+  "手嶌葵",
+  "Ms.OOJA",
+  "米津玄師",
+  "高梨康治",
+  "Akie秋绘",
+  "和田光司",
+  "宮崎歩",
+  "つじあやの",
+  "Goose house",
+  "seven oops",
+  "いきものがかり",
+  "浜崎あゆみ",
+  "RADWIMPS",
+  "高橋優",
+  "當山みれい",
+  "EGOIST",
+  "川嶋あい",
+  "まふまふ",
+  "久石譲",
+  "小田和正",
+  "中森明菜",
+  "放課後ティータイム",
+  "茶太",
+  "平井堅",
+  "神山羊",
+  "wacci",
+  "Naomile",
+  "MONKEY MAJIK",
+  "前田愛",
+  "星野源",
+  "柴田淳",
+  "岡村孝子",
+  "安全地帯",
+  "杏里",
+  "西城秀樹",
+  "希良梨",
+  "Eve",
+  "Daoko",
+  "eill",
+  "GARNiDELiA",
+  "GOING UNDER GROUND",
+  "jyA-Me",
+  "King Gnu",
+  "m-flo",
+  "m.o.v.e",
+  "MAGIC OF LiFE",
+  "Polkadot Stingray",
+  "back number",
+  "SawanoHiroyuki[nZk]",
+  "sumika",
+  "yama",
+  "一十三十一",
+  "中孝介",
+  "v flower",
+  "ONE☆DRAFT",
+  "bassy",
+  "miu-clips",
+  "電波少女",
+]);
+
+const krArtists = new Set(["IU", "Sik-K"]);
+const westernArtists = new Set([
+  "Ludwig van Beethoven",
+  "Carpenters",
+  "Rihanna",
+  "Adele",
+  "Bruno Mars",
+  "Michael Jackson",
+  "Charlie Puth",
+  "Jason Mraz",
+  "Queen",
+  "Alan Walker",
+  "Taylor Swift",
+  "Eminem",
+  "Justin Bieber",
+  "Johnny Cash",
+  "Ed Sheeran",
+  "P!nk",
+  "Fleurie",
+  "Matthias Reim",
+  "Maroon 5",
+  "Daddy Yankee",
+]);
+const instrumentalArtists = new Set(["Ludwig van Beethoven", "久石譲", "高梨康治"]);
+
 const primaryBucketDefs = [
   {
     key: "japanese_anime",
@@ -250,7 +348,7 @@ function compactSong(song) {
 function enrichTrack(track, index, privilegeMap) {
   const artists = (track.ar || []).map((artist) => artist.name).filter(Boolean);
   const allText = [track.name, artists.join(" "), track.al?.name].filter(Boolean).join(" ");
-  const primaryBucketKey = primaryBucketDefs.find((bucket) => bucket.test({ ...track, artists, allText, durationMs: track.dt || 0 }))?.key || "uncategorized";
+  const primaryBucketKey = primaryBucketFor(track, artists, allText);
   const tagKeys = tagDefs
     .filter((tag) => tag.test({ ...track, artists, allText, durationMs: track.dt || 0 }))
     .map((tag) => tag.key);
@@ -270,6 +368,31 @@ function enrichTrack(track, index, privilegeMap) {
     canonical: `${norm(track.name)} — ${norm(artists.join(" / "))}`,
     titleCanonical: norm(track.name),
   };
+}
+
+function primaryBucketFor(track, artists, allText) {
+  const title = track.name || "";
+  const hasCnTitle = cn.test(title);
+  const hasKanaText = kana.test(allText);
+  const hasHangulText = hangul.test(allText);
+  const hasJpArtist = artists.some((artist) => jpArtists.has(artist) || kana.test(artist));
+  const hasKrArtist = artists.some((artist) => krArtists.has(artist) || hangul.test(artist));
+  const hasWesternArtist = artists.some((artist) => westernArtists.has(artist));
+  const hasInstrumentalArtist = artists.some((artist) => instrumentalArtists.has(artist));
+  const hasChineseArtist = artists.some((artist) => cn.test(artist) && !jpArtists.has(artist) && !krArtists.has(artist));
+  const hasJapaneseSignals =
+    hasJpArtist ||
+    hasKanaText ||
+    /动漫|动画|anime|ost|op|ed|k-?on|けいおん|ヨルシカ|n-buna|aimyon|あいみょん|daoko|米津|doraemon|哆啦|gto/i.test(allText);
+
+  if (hasKrArtist || hasHangulText) return hasChineseArtist && hasCnTitle ? "chinese_pop" : "korean";
+  if (/纯音|钢琴|piano|instrumental|classical|古典|交响|小品/i.test(allText) || (hasInstrumentalArtist && !hasCnTitle)) {
+    return "instrumental_focus";
+  }
+  if (hasJapaneseSignals) return hasChineseArtist && hasCnTitle && !hasKanaText ? "chinese_pop" : "japanese_anime";
+  if (hasWesternArtist || (/^[\x00-\x7f\s·'’&.,:!?()+/\-]+$/.test(allText) && /[a-z]/i.test(allText))) return "english_pop";
+  if (hasCnTitle || hasChineseArtist || cn.test(allText)) return "chinese_pop";
+  return "uncategorized";
 }
 
 function norm(value) {
