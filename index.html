@@ -1,0 +1,1043 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="ncm-cli 是一个面向个人使用的网易云音乐命令行工具，支持登录、歌单管理、歌曲搜索、歌词、播放地址、JSON 输出和 macOS 桌面端播放。"
+    />
+    <meta property="og:title" content="ncm-cli - 网易云音乐命令行工具" />
+    <meta
+      property="og:description"
+      content="把网易云音乐搬进终端：搜歌、看歌词、管歌单，把结果交给脚本和 Agent 继续处理。"
+    />
+    <meta property="og:image" content="promo/xiaohongshu-ncm-cli.png" />
+    <title>ncm-cli - 网易云音乐命令行工具</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23df3f45'/%3E%3Ctext x='32' y='42' text-anchor='middle' font-family='Arial,sans-serif' font-size='32' font-weight='900' fill='white'%3En%3C/text%3E%3C/svg%3E"
+    />
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f7f6f2;
+        --ink: #191b1f;
+        --muted: #5e6470;
+        --line: rgba(25, 27, 31, 0.12);
+        --panel: #ffffff;
+        --panel-soft: #f0f4f7;
+        --red: #df3f45;
+        --red-deep: #b82831;
+        --cyan: #23c4b8;
+        --green: #74a66b;
+        --yellow: #f2c14d;
+        --blue: #5677a6;
+        --dark: #11151b;
+        --shadow: 0 24px 80px rgba(22, 28, 36, 0.16);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        color: var(--ink);
+        background: var(--bg);
+        font-family:
+          "PingFang SC",
+          "Hiragino Sans GB",
+          "Microsoft YaHei",
+          Arial,
+          sans-serif;
+        line-height: 1.6;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      button,
+      input {
+        font: inherit;
+      }
+
+      .site-header {
+        position: fixed;
+        z-index: 20;
+        top: 0;
+        left: 0;
+        right: 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+        color: #fff;
+        background: rgba(12, 15, 20, 0.72);
+        backdrop-filter: blur(18px);
+      }
+
+      .nav {
+        display: flex;
+        width: min(1180px, calc(100% - 40px));
+        min-height: 72px;
+        margin: 0 auto;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 19px;
+        font-weight: 850;
+        letter-spacing: 0;
+      }
+
+      .brand-mark {
+        display: grid;
+        width: 40px;
+        height: 40px;
+        place-items: center;
+        border-radius: 8px;
+        color: #fff;
+        background: linear-gradient(145deg, #ff4760, #c92a31);
+        box-shadow: 0 10px 22px rgba(223, 63, 69, 0.36);
+      }
+
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        color: rgba(255, 255, 255, 0.78);
+        font-size: 14px;
+        font-weight: 720;
+      }
+
+      .nav-links a {
+        transition:
+          color 160ms ease,
+          transform 160ms ease;
+      }
+
+      .nav-links a:hover,
+      .nav-links a:focus-visible {
+        color: #fff;
+        transform: translateY(-1px);
+      }
+
+      .header-cta {
+        display: inline-flex;
+        min-height: 40px;
+        align-items: center;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 8px;
+        padding: 0 14px;
+        color: #11151b;
+        background: #fff;
+        font-weight: 850;
+      }
+
+      .hero {
+        position: relative;
+        display: grid;
+        min-height: 86svh;
+        overflow: hidden;
+        color: #fff;
+        background:
+          linear-gradient(90deg, rgba(10, 12, 16, 0.96) 0%, rgba(10, 12, 16, 0.9) 38%, rgba(10, 12, 16, 0.25) 72%, rgba(10, 12, 16, 0.55) 100%),
+          url("promo/xiaohongshu-ncm-cli.png");
+        background-position:
+          center,
+          center 56%;
+        background-size:
+          cover,
+          cover;
+        background-repeat: no-repeat;
+      }
+
+      .hero::after {
+        content: "";
+        position: absolute;
+        inset: auto 0 0;
+        height: 180px;
+        background: linear-gradient(180deg, rgba(247, 246, 242, 0), var(--bg));
+        pointer-events: none;
+      }
+
+      .hero-inner {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        width: min(1180px, calc(100% - 40px));
+        margin: 0 auto;
+        padding: 150px 0 104px;
+        align-items: end;
+      }
+
+      .hero-content {
+        max-width: 720px;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0 0 22px;
+        color: #ffd861;
+        font-size: 14px;
+        font-weight: 850;
+        text-transform: uppercase;
+        letter-spacing: 0;
+      }
+
+      .eyebrow::before {
+        content: "";
+        width: 12px;
+        height: 12px;
+        border-radius: 999px;
+        background: var(--cyan);
+        box-shadow: 0 0 0 6px rgba(35, 196, 184, 0.16);
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin-top: 0;
+      }
+
+      h1 {
+        margin-bottom: 24px;
+        font-size: clamp(64px, 10vw, 136px);
+        line-height: 0.92;
+        font-weight: 950;
+        letter-spacing: 0;
+      }
+
+      .lead {
+        max-width: 650px;
+        margin-bottom: 32px;
+        color: rgba(255, 255, 255, 0.86);
+        font-size: clamp(20px, 2.6vw, 34px);
+        line-height: 1.34;
+        font-weight: 820;
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 34px;
+      }
+
+      .button {
+        display: inline-flex;
+        min-height: 48px;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        padding: 0 18px;
+        cursor: pointer;
+        font-weight: 850;
+        transition:
+          transform 160ms ease,
+          box-shadow 160ms ease,
+          border-color 160ms ease;
+      }
+
+      .button:hover,
+      .button:focus-visible {
+        transform: translateY(-2px);
+      }
+
+      .button-primary {
+        color: #fff;
+        background: var(--red);
+        box-shadow: 0 18px 34px rgba(223, 63, 69, 0.32);
+      }
+
+      .button-primary:hover,
+      .button-primary:focus-visible {
+        box-shadow: 0 22px 44px rgba(223, 63, 69, 0.42);
+      }
+
+      .button-ghost {
+        color: #fff;
+        border-color: rgba(255, 255, 255, 0.28);
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .hero-stats {
+        display: grid;
+        max-width: 640px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .stat {
+        min-height: 86px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 8px;
+        padding: 16px;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .stat strong {
+        display: block;
+        margin-bottom: 4px;
+        color: #fff;
+        font-size: 24px;
+        line-height: 1.1;
+      }
+
+      .stat span {
+        color: rgba(255, 255, 255, 0.68);
+        font-size: 13px;
+        font-weight: 720;
+      }
+
+      .section {
+        padding: 88px 0;
+      }
+
+      .section.alt {
+        background: #fff;
+      }
+
+      .section.dark {
+        color: #fff;
+        background: var(--dark);
+      }
+
+      .container {
+        width: min(1180px, calc(100% - 40px));
+        margin: 0 auto;
+      }
+
+      .section-heading {
+        display: grid;
+        max-width: 780px;
+        gap: 12px;
+        margin-bottom: 34px;
+      }
+
+      .section-kicker {
+        color: var(--red);
+        font-size: 14px;
+        font-weight: 900;
+      }
+
+      h2 {
+        margin-bottom: 0;
+        font-size: clamp(34px, 5vw, 64px);
+        line-height: 1.05;
+        letter-spacing: 0;
+      }
+
+      .section-heading p {
+        margin-bottom: 0;
+        color: var(--muted);
+        font-size: 18px;
+      }
+
+      .section-heading code,
+      .feature code,
+      .step code {
+        border-radius: 5px;
+        padding: 2px 6px;
+        color: var(--red-deep);
+        background: rgba(223, 63, 69, 0.08);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.92em;
+      }
+
+      .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .feature {
+        display: grid;
+        min-height: 188px;
+        align-content: start;
+        gap: 14px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 24px;
+        background: var(--panel);
+        box-shadow: 0 12px 30px rgba(35, 40, 48, 0.05);
+      }
+
+      .feature-icon {
+        display: grid;
+        width: 42px;
+        height: 42px;
+        place-items: center;
+        border-radius: 8px;
+        color: #fff;
+        font-weight: 950;
+      }
+
+      .feature:nth-child(1) .feature-icon {
+        background: var(--red);
+      }
+
+      .feature:nth-child(2) .feature-icon {
+        background: var(--cyan);
+      }
+
+      .feature:nth-child(3) .feature-icon {
+        background: var(--green);
+      }
+
+      .feature:nth-child(4) .feature-icon {
+        background: var(--yellow);
+        color: #1d1a12;
+      }
+
+      .feature:nth-child(5) .feature-icon {
+        background: var(--blue);
+      }
+
+      .feature:nth-child(6) .feature-icon {
+        background: #20242b;
+      }
+
+      .feature h3 {
+        margin-bottom: 0;
+        font-size: 22px;
+        line-height: 1.2;
+      }
+
+      .feature p {
+        margin-bottom: 0;
+        color: var(--muted);
+        font-size: 15px;
+      }
+
+      .workflow {
+        display: grid;
+        grid-template-columns: minmax(0, 0.9fr) minmax(320px, 1.1fr);
+        gap: 32px;
+        align-items: center;
+      }
+
+      .command-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 28px;
+      }
+
+      .command-tab {
+        min-height: 42px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 8px;
+        padding: 0 14px;
+        color: rgba(255, 255, 255, 0.78);
+        background: rgba(255, 255, 255, 0.06);
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 850;
+      }
+
+      .command-tab[aria-selected="true"] {
+        color: #11151b;
+        background: #fff;
+      }
+
+      .terminal {
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 8px;
+        background: #090c10;
+        box-shadow: var(--shadow);
+      }
+
+      .terminal-bar {
+        display: flex;
+        min-height: 48px;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 0 18px;
+        color: rgba(255, 255, 255, 0.56);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 13px;
+      }
+
+      .lights {
+        display: flex;
+        gap: 8px;
+      }
+
+      .lights span {
+        width: 12px;
+        height: 12px;
+        border-radius: 999px;
+      }
+
+      .lights span:nth-child(1) {
+        background: #ff5f57;
+      }
+
+      .lights span:nth-child(2) {
+        background: #ffbd2e;
+      }
+
+      .lights span:nth-child(3) {
+        background: #28c840;
+      }
+
+      .terminal pre {
+        min-height: 368px;
+        margin: 0;
+        overflow-x: auto;
+        padding: 28px;
+        color: #f7f7f7;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: clamp(14px, 1.8vw, 18px);
+        line-height: 1.75;
+        white-space: pre-wrap;
+      }
+
+      .prompt {
+        color: #41dfd2;
+      }
+
+      .hl {
+        color: #ffd85c;
+      }
+
+      .ok {
+        color: #9be37f;
+      }
+
+      .dim {
+        color: #87909d;
+      }
+
+      .install {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(320px, 0.9fr);
+        gap: 28px;
+        align-items: stretch;
+      }
+
+      .install-panel {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 28px;
+        background: var(--panel);
+      }
+
+      .command-copy {
+        display: grid;
+        gap: 12px;
+        margin-top: 22px;
+      }
+
+      .copy-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 10px;
+      }
+
+      .copy-row code {
+        display: block;
+        min-height: 52px;
+        overflow-x: auto;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 15px 16px;
+        color: #f6f8fb;
+        background: #11151b;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+        white-space: nowrap;
+      }
+
+      .copy-button {
+        min-width: 92px;
+        min-height: 52px;
+        border: 0;
+        border-radius: 8px;
+        color: #fff;
+        background: var(--red);
+        cursor: pointer;
+        font-weight: 850;
+      }
+
+      .steps {
+        display: grid;
+        gap: 14px;
+      }
+
+      .step {
+        display: grid;
+        grid-template-columns: 36px minmax(0, 1fr);
+        gap: 14px;
+        align-items: start;
+      }
+
+      .step-number {
+        display: grid;
+        width: 36px;
+        height: 36px;
+        place-items: center;
+        border-radius: 8px;
+        color: #fff;
+        background: var(--ink);
+        font-weight: 900;
+      }
+
+      .step strong {
+        display: block;
+        margin-bottom: 2px;
+      }
+
+      .step span {
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .visual-strip {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .visual-strip img {
+        width: 100%;
+        height: 360px;
+        object-fit: cover;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #ddd;
+        box-shadow: 0 16px 46px rgba(35, 40, 48, 0.08);
+      }
+
+      .visual-strip img:nth-child(1) {
+        object-position: center 18%;
+      }
+
+      .visual-strip img:nth-child(2) {
+        object-position: center 38%;
+      }
+
+      .visual-strip img:nth-child(3) {
+        object-position: center 22%;
+      }
+
+      .footer {
+        border-top: 1px solid var(--line);
+        padding: 32px 0;
+        color: var(--muted);
+        background: #fff;
+      }
+
+      .footer-inner {
+        display: flex;
+        width: min(1180px, calc(100% - 40px));
+        margin: 0 auto;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        font-size: 14px;
+      }
+
+      .footer-links {
+        display: flex;
+        gap: 16px;
+        font-weight: 780;
+      }
+
+      @media (max-width: 920px) {
+        .nav-links {
+          display: none;
+        }
+
+        .hero {
+          min-height: 82svh;
+          background:
+            linear-gradient(180deg, rgba(10, 12, 16, 0.94) 0%, rgba(10, 12, 16, 0.84) 48%, rgba(10, 12, 16, 0.96) 100%),
+            url("promo/xiaohongshu-ncm-cli.png");
+          background-position:
+            center,
+            center 68%;
+          background-size:
+            cover,
+            auto 170%;
+        }
+
+        .hero-inner {
+          padding-top: 122px;
+          padding-bottom: 74px;
+        }
+
+        .hero-stats,
+        .feature-grid,
+        .workflow,
+        .install,
+        .visual-strip {
+          grid-template-columns: 1fr;
+        }
+
+        .visual-strip img {
+          height: min(520px, 72vw);
+        }
+      }
+
+      @media (max-width: 620px) {
+        .nav {
+          width: min(100% - 28px, 1180px);
+          min-height: 64px;
+        }
+
+        .brand {
+          font-size: 17px;
+        }
+
+        .header-cta {
+          min-height: 36px;
+          padding: 0 12px;
+          font-size: 13px;
+        }
+
+        .hero-inner,
+        .container,
+        .footer-inner {
+          width: min(100% - 28px, 1180px);
+        }
+
+        .hero-actions {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .button {
+          width: 100%;
+        }
+
+        .hero-stats {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 8px;
+        }
+
+        .stat {
+          min-height: 78px;
+          padding: 12px;
+        }
+
+        .stat strong {
+          font-size: 22px;
+        }
+
+        .stat span {
+          font-size: 12px;
+          line-height: 1.25;
+        }
+
+        .section {
+          padding: 64px 0;
+        }
+
+        .feature,
+        .install-panel {
+          padding: 20px;
+        }
+
+        .copy-row {
+          grid-template-columns: 1fr;
+        }
+
+        .copy-button {
+          width: 100%;
+        }
+
+        .terminal pre {
+          min-height: 300px;
+          padding: 22px;
+        }
+
+        .footer-inner {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          scroll-behavior: auto !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav" aria-label="主导航">
+        <a class="brand" href="#top" aria-label="ncm-cli 首页">
+          <span class="brand-mark">n</span>
+          <span>ncm-cli</span>
+        </a>
+        <div class="nav-links">
+          <a href="#features">能力</a>
+          <a href="#workflow">命令</a>
+          <a href="#install">安装</a>
+          <a href="https://github.com/Davied-H/ncm-cli">GitHub</a>
+        </div>
+        <a class="header-cta" href="#install">开始安装</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-inner">
+          <div class="hero-content">
+            <p class="eyebrow">Go CLI · macOS 播放 · Agent 友好</p>
+            <h1 id="hero-title">ncm-cli</h1>
+            <p class="lead">
+              一个面向个人使用的网易云音乐命令行工具。搜歌、看歌词、管歌单，把结果输出成 JSON 交给脚本继续处理。
+            </p>
+            <div class="hero-actions">
+              <a class="button button-primary" href="#install">安装 ncm</a>
+              <a class="button button-ghost" href="https://github.com/Davied-H/ncm-cli">查看源码</a>
+            </div>
+            <div class="hero-stats" aria-label="项目能力概览">
+              <div class="stat">
+                <strong>20+</strong>
+                <span>常用音乐命令</span>
+              </div>
+              <div class="stat">
+                <strong>JSON</strong>
+                <span>适合脚本与 Agent</span>
+              </div>
+              <div class="stat">
+                <strong>本地</strong>
+                <span>登录态留在你的机器</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="features">
+        <div class="container">
+          <div class="section-heading">
+            <span class="section-kicker">FEATURES</span>
+            <h2>把日常音乐资料整理，变成一组稳定命令。</h2>
+            <p>ncm-cli 复用网易云 Web 端调用模型，覆盖登录、搜索、歌单管理、歌词、播放地址和桌面端播放。</p>
+          </div>
+          <div class="feature-grid">
+            <article class="feature">
+              <span class="feature-icon">我</span>
+              <h3>账号与登录</h3>
+              <p>使用浏览器完成网易云登录，本地保存登录态；<code>ncm me</code> 快速确认当前账号。</p>
+            </article>
+            <article class="feature">
+              <span class="feature-icon">搜</span>
+              <h3>歌曲与歌单搜索</h3>
+              <p>支持搜索建议、歌曲搜索和歌单搜索，可用 <code>--json</code> 输出给自动化流程。</p>
+            </article>
+            <article class="feature">
+              <span class="feature-icon">词</span>
+              <h3>歌词直读</h3>
+              <p>查看结构化歌词信息，或用 <code>--raw</code> 直接读取原始歌词文本。</p>
+            </article>
+            <article class="feature">
+              <span class="feature-icon">单</span>
+              <h3>歌单管理</h3>
+              <p>创建、加歌、移除、重命名、改标签、改描述和删除自建歌单。</p>
+            </article>
+            <article class="feature">
+              <span class="feature-icon">{ }</span>
+              <h3>自动化友好</h3>
+              <p>主要读取命令和歌单写命令支持 JSON，方便接入脚本、快捷指令和 Agent。</p>
+            </article>
+            <article class="feature">
+              <span class="feature-icon">▶</span>
+              <h3>桌面端播放</h3>
+              <p>在 macOS 上通过 <code>ncm play</code> 调起网易云音乐桌面端播放指定歌曲。</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section dark" id="workflow">
+        <div class="container workflow">
+          <div>
+            <div class="section-heading">
+              <span class="section-kicker">COMMANDS</span>
+              <h2>终端里查、改、播，结果继续流向你的工具链。</h2>
+              <p>常用命令覆盖从发现音乐到整理歌单的完整路径；点击切换示例输出。</p>
+            </div>
+            <div class="command-tabs" role="tablist" aria-label="命令示例">
+              <button class="command-tab" type="button" role="tab" aria-selected="true" data-command="search">搜歌</button>
+              <button class="command-tab" type="button" role="tab" aria-selected="false" data-command="playlist">歌单</button>
+              <button class="command-tab" type="button" role="tab" aria-selected="false" data-command="lyric">歌词</button>
+              <button class="command-tab" type="button" role="tab" aria-selected="false" data-command="play">播放</button>
+            </div>
+          </div>
+
+          <div class="terminal" aria-live="polite">
+            <div class="terminal-bar">
+              <div class="lights" aria-hidden="true"><span></span><span></span><span></span></div>
+              <span>~/music-workflow</span>
+            </div>
+            <pre id="terminal-output"><span class="prompt">$</span> ncm search song <span class="hl">周杰伦</span> --limit 3 --json
+<span class="ok">1.</span> 晴天
+<span class="ok">2.</span> 稻香
+<span class="ok">3.</span> 夜曲
+
+<span class="prompt">$</span> ncm song <span class="hl">210049</span> --json
+<span class="dim"># 输出歌曲、歌手、专辑、时长和权限信息</span></pre>
+          </div>
+        </div>
+      </section>
+
+      <section class="section alt" id="install">
+        <div class="container install">
+          <div class="install-panel">
+            <div class="section-heading">
+              <span class="section-kicker">INSTALL</span>
+              <h2>一条命令安装 CLI 和登录 driver。</h2>
+              <p>安装器会优先下载 GitHub Release 里的预编译二进制，默认写入 <code>~/.local/bin/ncm</code>。</p>
+            </div>
+            <div class="command-copy">
+              <div class="copy-row">
+                <code id="install-command">PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright npx --yes github:Davied-H/ncm-cli install --dir ~/.local/bin --with-playwright-driver</code>
+                <button class="copy-button" type="button" data-copy="install-command">复制</button>
+              </div>
+              <div class="copy-row">
+                <code id="login-command">ncm login</code>
+                <button class="copy-button" type="button" data-copy="login-command">复制</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="install-panel">
+            <div class="steps">
+              <div class="step">
+                <span class="step-number">1</span>
+                <div>
+                  <strong>安装 ncm</strong>
+                  <span>准备 CLI 和 Playwright driver，默认使用系统 Chrome 登录。</span>
+                </div>
+              </div>
+              <div class="step">
+                <span class="step-number">2</span>
+                <div>
+                  <strong>完成登录</strong>
+                  <span>运行 <code>ncm login</code>，扫码或网页登录；登录态保存到本机配置目录。</span>
+                </div>
+              </div>
+              <div class="step">
+                <span class="step-number">3</span>
+                <div>
+                  <strong>开始自动化</strong>
+                  <span>使用 <code>ncm me --json</code>、<code>ncm playlist list --json</code> 验证账号和歌单。</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container">
+          <div class="section-heading">
+            <span class="section-kicker">PREVIEW</span>
+            <h2>为终端、脚本和个人歌单整理而生。</h2>
+            <p>仓库里的宣传图也可以直接用于分享或项目说明。</p>
+          </div>
+          <div class="visual-strip" aria-label="ncm-cli 宣传视觉">
+            <img src="promo/xiaohongshu-ncm-cli.png" alt="ncm-cli 深色命令行宣传图" loading="lazy" />
+            <img src="promo/xiaohongshu-ncm-cli-share.png" alt="ncm-cli 白色分享宣传图" loading="lazy" />
+            <img src="promo/xiaohongshu-ncm-cli-lifestyle.png" alt="ncm-cli 生活化推广图" loading="lazy" />
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        <span>ncm-cli · 非官方个人工具，播放能力以账号和客户端状态为准。</span>
+        <div class="footer-links">
+          <a href="README.md">README</a>
+          <a href="docs/ncm-cli-plan.md">CLI 规划</a>
+          <a href="https://github.com/Davied-H/ncm-cli">GitHub</a>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      const examples = {
+        search: `<span class="prompt">$</span> ncm search song <span class="hl">周杰伦</span> --limit 3 --json
+<span class="ok">1.</span> 晴天
+<span class="ok">2.</span> 稻香
+<span class="ok">3.</span> 夜曲
+
+<span class="prompt">$</span> ncm song <span class="hl">210049</span> --json
+<span class="dim"># 输出歌曲、歌手、专辑、时长和权限信息</span>`,
+        playlist: `<span class="prompt">$</span> ncm playlist list --json
+<span class="dim"># 列出自建歌单和收藏歌单</span>
+
+<span class="prompt">$</span> ncm playlist add <span class="hl">123456</span> <span class="hl">210049</span>
+<span class="ok"># 已添加到自己的歌单</span>
+
+<span class="prompt">$</span> ncm playlist tidy duplicates <span class="hl">123456</span> --json
+<span class="dim"># 找出重复歌曲，必要时再确认清理</span>`,
+        lyric: `<span class="prompt">$</span> ncm lyric <span class="hl">210049</span> --raw
+稻香 - 周杰伦
+对这个世界如果你有太多的抱怨
+跌倒了 就不敢继续往前走
+
+<span class="prompt">$</span> ncm lyric <span class="hl">210049</span> --json
+<span class="dim"># 输出可解析的歌词结构</span>`,
+        play: `<span class="prompt">$</span> ncm url <span class="hl">210049</span> --level exhigh --json
+<span class="dim"># 播放 URL 受版权、会员、地区和登录态影响</span>
+
+<span class="prompt">$</span> ncm play <span class="hl">210049</span>
+<span class="ok"># 在 macOS 网易云音乐桌面端播放</span>`
+      };
+
+      const output = document.querySelector("#terminal-output");
+      document.querySelectorAll(".command-tab").forEach((tab) => {
+        tab.addEventListener("click", () => {
+          document.querySelectorAll(".command-tab").forEach((item) => item.setAttribute("aria-selected", "false"));
+          tab.setAttribute("aria-selected", "true");
+          output.innerHTML = examples[tab.dataset.command];
+        });
+      });
+
+      document.querySelectorAll("[data-copy]").forEach((button) => {
+        button.addEventListener("click", async () => {
+          const target = document.getElementById(button.dataset.copy);
+          const value = target.textContent.trim();
+          try {
+            await navigator.clipboard.writeText(value);
+            button.textContent = "已复制";
+          } catch {
+            button.textContent = "手动复制";
+          }
+          window.setTimeout(() => {
+            button.textContent = "复制";
+          }, 1600);
+        });
+      });
+    </script>
+  </body>
+</html>
